@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pingwatch"
+version = "0.1.0"
+description = "Print the HTTP status of each URL"
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = ["ruff>=0.17"]
+
+[project.scripts]
+pingwatch = "src.pingwatch.cli:main"
+dependencies = ["httpx==0.28.1", "pytest>=8"]

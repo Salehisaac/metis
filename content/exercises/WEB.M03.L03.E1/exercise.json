@@ -1,0 +1,48 @@
+{
+  "id": "WEB.M03.L03.E1",
+  "lesson": "WEB.M03.L03",
+  "title": "Split a chat-folders feature into router, service and dependencies",
+  "problem": "Chat folders (like Work, Family, Bots) need an API. repository.py (storage) and main.py (app, router inclusion, domain-error handlers) are finished. Write services.py (the rules, with no FastAPI), deps.py (wiring with Depends) and folders_router.py (the HTTP layer) so the app works and each layer can be tested on its own.",
+  "requirements": [
+    "services.FolderService(repo, max_folders=3) with create(name), get(id), list(), delete(id); no fastapi import anywhere in services.py",
+    "create: strip the name; blank -> ValueError; same name ignoring case -> FolderNameTaken; already max_folders folders -> FolderLimitReached; else store and return the folder",
+    "get and delete: unknown id -> FolderNotFound. list: folders sorted by name, ignoring case",
+    "deps.get_repository() returns one shared FolderRepository (the same object every call); deps.get_folder_service depends on get_repository and returns a FolderService around it",
+    "folders_router.router has prefix \"/folders\" and tags [\"folders\"], and the endpoints POST /folders (201), GET /folders, GET /folders/{folder_id}, DELETE /folders/{folder_id} (204, empty body)",
+    "Bodies are {\"name\": str}; a blank name is a 422 before the service is called; responses are {\"id\": int, \"name\": str}",
+    "Don't edit repository.py or main.py"
+  ],
+  "contract": "FolderService(repo: FolderRepository, max_folders: int = 3); deps.get_repository() -> FolderRepository; deps.get_folder_service(repo) -> FolderService; folders_router.router: APIRouter",
+  "expectedBehavior": "POST /folders {\"name\": \"Work\"} -> 201 {\"id\": 1, \"name\": \"Work\"}; POST {\"name\": \"work\"} -> 409 folder name already taken; a 4th folder -> 409 folder limit reached; GET /folders/7 -> 404 folder not found",
+  "edgeCases": [
+    "\" WORK \" is a duplicate of \"Work\"",
+    "\"   \" is rejected: ValueError in the service, 422 over HTTP",
+    "Deleting a folder frees a slot under the limit",
+    "Sorting ignores case: bots before Work",
+    "Each test injects its own empty repository via dependency_overrides"
+  ],
+  "tests": [
+    "test_service_creates_and_lists_by_name",
+    "test_service_rejects_blank_and_duplicate_names",
+    "test_service_limit_counts_existing_folders",
+    "test_service_not_found",
+    "test_services_module_does_not_import_fastapi",
+    "test_repository_dependency_is_shared",
+    "test_router_has_prefix_and_tags",
+    "test_api_create_list_get_delete",
+    "test_api_errors",
+    "test_api_blank_name_is_422",
+    "test_each_test_gets_its_own_repository"
+  ],
+  "hints": [
+    "Conceptual: start with the service and its tests (no HTTP at all), then the two dependency functions, then the router. Each layer only calls the one below it.",
+    "Specific: the service raises the three exception classes already defined in services.py; main.py maps them to 404/409. get_repository needs @lru_cache. The router needs APIRouter(prefix=..., tags=[...]) and an Annotated alias for Depends(get_folder_service).",
+    "Implementation: in create, strip, reject blank with ValueError, compare casefold() against self.repo.all(), check len(existing) >= self.max_folders, then return self.repo.add(clean). For the body model, ConfigDict(str_strip_whitespace=True) with Field(min_length=1) turns \"   \" into a 422."
+  ],
+  "evaluation": [
+    "All eleven tests pass",
+    "services.py has no FastAPI or HTTP status codes",
+    "Routers contain no business rules; each endpoint is one service call",
+    "Wiring goes through Depends, so tests can override the repository"
+  ]
+}

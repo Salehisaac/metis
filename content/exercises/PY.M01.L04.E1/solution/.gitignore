@@ -1,0 +1,10 @@
+# Virtual environments
+.venv/
+
+# Python bytecode caches
+__pycache__/
+*.pyc
+
+# pytest
+.pytest_cache/
+result.xml

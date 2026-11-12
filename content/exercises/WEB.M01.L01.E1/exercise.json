@@ -1,0 +1,47 @@
+{
+  "id": "WEB.M01.L01.E1",
+  "lesson": "WEB.M01.L01",
+  "title": "List a chat's messages with paging and a filter",
+  "problem": "messages_api.py has an app and an in-memory MESSAGES list, but no routes. Add GET /chats/{chat_id}/messages that returns that chat's messages newest first, with a capped limit, cursor-style paging via `before`, and an unread filter. Let FastAPI do the parsing and validation: no manual int() or bool parsing.",
+  "requirements": [
+    "GET /chats/{chat_id}/messages returns {\"chat_id\": <int>, \"messages\": [...]} with each message dict unchanged",
+    "Messages are that chat's only, sorted by id descending (newest first)",
+    "Query `limit`: optional, default 20, must be between 1 and 100 inclusive; otherwise 422",
+    "Query `before`: optional int; when given, only messages with id < before",
+    "Query `unread_only`: optional bool, default false; when true, only messages with read == False",
+    "Filters (chat, before, unread_only) apply first, then the limit",
+    "Don't modify or reorder MESSAGES"
+  ],
+  "contract": "GET /chats/{chat_id}/messages?limit=20&before=<id>&unread_only=false -> 200 {\"chat_id\": int, \"messages\": [message, ...]}",
+  "expectedBehavior": "GET /chats/10/messages -> ids [5, 4, 2, 1]; ?before=5&limit=1 -> [4]; ?unread_only=true -> [5, 4]; /chats/99/messages -> {\"chat_id\": 99, \"messages\": []}; ?limit=0 -> 422",
+  "edgeCases": [
+    "A chat with no messages: 200 and an empty list, not an error",
+    "`before` is exclusive: before=4 excludes message 4",
+    "limit=1 and limit=100 are valid; 0 and 101 are 422",
+    "chat_id or before that isn't an int, and unread_only=maybe: 422 from FastAPI",
+    "unread_only accepts true/yes/on/1 like any FastAPI bool",
+    "Sorting MESSAGES in place would change the data for every later request"
+  ],
+  "tests": [
+    "test_lists_chat_messages_newest_first",
+    "test_limit_applies_after_sorting",
+    "test_before_is_exclusive",
+    "test_before_and_limit_combine",
+    "test_unread_only_accepts_bool_spellings",
+    "test_chat_without_messages_gives_empty_list",
+    "test_limit_bounds",
+    "test_bad_types_give_422",
+    "test_listing_does_not_reorder_the_data"
+  ],
+  "hints": [
+    "Conceptual: one path parameter and three query parameters. Their types and defaults are the whole validation; your function body only filters, sorts and slices.",
+    "Specific: `limit` needs Annotated[int, Query(ge=..., le=...)] with a default of 20; `before` is optional with no value, so its default is None. Filter first, sort second, slice last.",
+    "Implementation: build a new list with a comprehension that keeps m when m[\"chat_id\"] matches, before is None or m[\"id\"] < before, and not (unread_only and m[\"read\"]). Then sorted(..., key=lambda m: m[\"id\"], reverse=True)[:limit]."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "No manual parsing: types, defaults and Query constraints do the validation",
+    "sorted() on a new list, not MESSAGES.sort()",
+    "The limit is applied after filtering and sorting"
+  ]
+}

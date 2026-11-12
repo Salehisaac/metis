@@ -1,0 +1,47 @@
+{
+  "id": "PY.M07.L01.E1",
+  "lesson": "PY.M07.L01",
+  "title": "A lazy log pipeline with three generators",
+  "problem": "Write three generator functions in logpipe.py that can be chained into a pipeline: parse_lines turns raw log lines into (LEVEL, message) tuples, only_level keeps one level, and first_n stops after n items. The pipeline must stay lazy: it must work on an endless input and must not read more lines than it needs.",
+  "requirements": [
+    "All three functions are generator functions (they use yield and return nothing)",
+    "parse_lines strips each line, skips blank lines and lines starting with '#', and yields (LEVEL, message): the first word uppercased, and the rest of the line (stripped, or '' if there is none)",
+    "only_level yields the records whose level equals the given level, compared case-insensitively",
+    "first_n yields at most n items and never pulls item n+1 from its input; n <= 0 pulls nothing",
+    "No lists of the whole input: each stage handles one item at a time"
+  ],
+  "contract": "parse_lines(lines: Iterable[str]) -> Iterator[tuple[str, str]]\nonly_level(records: Iterable[tuple[str, str]], level: str) -> Iterator[tuple[str, str]]\nfirst_n(items: Iterable[T], n: int) -> Iterator[T]",
+  "expectedBehavior": "list(parse_lines(['  warn  disk 91%  ', '', '# x', 'DEBUG'])) == [('WARN', 'disk 91%'), ('DEBUG', '')]; list(first_n(itertools.count(), 3)) == [0, 1, 2], even though count() never ends",
+  "edgeCases": [
+    "Blank and whitespace-only lines, comment lines",
+    "A level with no message",
+    "Lines from a file still end in '\\n'",
+    "n larger than the input, n == 0, negative n",
+    "An endless input (the tests fail a stage that pulls far more items than it needs)",
+    "first_n must leave item n+1 unread in the source iterator"
+  ],
+  "tests": [
+    "test_parse_basic",
+    "test_parse_skips_blank_and_comment_lines",
+    "test_parse_level_without_message",
+    "test_parse_reads_file_lines",
+    "test_parse_is_lazy",
+    "test_only_level_is_case_insensitive",
+    "test_first_n_does_not_pull_extra_items",
+    "test_first_n_zero_or_negative_pulls_nothing",
+    "test_first_n_shorter_input",
+    "test_first_n_on_endless_input",
+    "test_pipeline_on_endless_log"
+  ],
+  "hints": [
+    "Conceptual: each function is a loop over its input that yields instead of appending to a list. A stage only runs when the stage after it asks for the next item, so nothing may build the whole result first.",
+    "Specific: for parse_lines, strip first, then decide to skip, then split the line into at most two parts (split has a maxsplit parameter). For first_n, think about the order: if you check the count before yielding, you have already pulled one item too many.",
+    "Implementation: first_n: return immediately if n <= 0; otherwise loop over items, yield the item, add 1 to a counter, and return as soon as the counter reaches n."
+  ],
+  "evaluation": [
+    "All eleven tests pass",
+    "Each function is a generator; no list of the whole input is built",
+    "first_n stops pulling at exactly n items",
+    "Edge cases are handled by the logic, not by special-casing test inputs"
+  ]
+}

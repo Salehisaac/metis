@@ -1,0 +1,45 @@
+{
+  "id": "DB.M04.L02.E1",
+  "lesson": "DB.M04.L02",
+  "title": "User search with literal LIKE matching, and an all-or-nothing bulk import",
+  "problem": "Implement two functions in users.py. find_users searches usernames for a substring, where %, _ and backslash typed by the user must match themselves, and returns User dataclass objects. add_users imports many users with executemany in one transaction: all rows or none.",
+  "requirements": [
+    "Edit only users.py; keep the User dataclass as it is",
+    "find_users returns a list of User objects ordered by username",
+    "find_users matches the text anywhere in the username, ignoring ASCII case; %, _ and \\ in the text match only themselves; empty text matches everyone",
+    "The search text is passed as a parameter (placeholder), never pasted into SQL",
+    "add_users inserts every (username, created_at) pair with executemany and returns the number inserted",
+    "add_users accepts any iterable, including a generator",
+    "add_users is all or nothing, leaves no transaction open, and lets the error reach the caller"
+  ],
+  "contract": "find_users(conn, text: str) -> list[User]; add_users(conn, rows: Iterable[tuple[str, str]]) -> int",
+  "expectedBehavior": "find_users(conn, 'an') returns [User(1, 'ana', '2026-10-01 10:00:00')]; after adding 'a_b' and 'axb', find_users(conn, 'a_b') returns only a_b; add_users(conn, [('hal', T), ('ana', T)]) raises sqlite3.IntegrityError and 'hal' is not stored",
+  "edgeCases": [
+    "Search text containing %, _ or a backslash",
+    "Search text in a different case ('AN')",
+    "Search text containing a quote (o'n)",
+    "Empty search text; text that matches nothing",
+    "add_users given a generator",
+    "A duplicate username in the middle of a batch"
+  ],
+  "tests": [
+    "test_find_users_returns_user_objects",
+    "test_find_users_ignores_ascii_case_and_orders_by_username",
+    "test_find_users_treats_wildcards_literally",
+    "test_find_users_quote_empty_and_no_match",
+    "test_add_users_inserts_all_and_returns_the_count",
+    "test_add_users_accepts_a_generator",
+    "test_add_users_is_all_or_nothing"
+  ],
+  "hints": [
+    "Conceptual: a placeholder protects the SQL statement, but inside LIKE the value is still a pattern where % and _ are wildcards. You need a second, different escaping: of the pattern's wildcards, with an escape character you declare in the SQL.",
+    "Specific: pick backslash as the escape character with ESCAPE '\\' after the LIKE. In the text, replace backslash first (with two backslashes), then % and _ (with a backslash before each); then wrap in % ... % and pass that as the parameter. For User objects, set a row_factory on a cursor, or build User(*row). executemany inside `with conn:` makes the batch one transaction.",
+    "Implementation: pattern = '%' + text.replace('\\\\', '\\\\\\\\').replace('%', '\\\\%').replace('_', '\\\\_') + '%' (in Python source, a backslash in a string is written '\\\\'); SQL: ... WHERE username LIKE ? ESCAPE '\\' ORDER BY username. add_users: with conn: cur = conn.executemany(sql, rows); return cur.rowcount."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "The backslash is escaped before % and _ (otherwise the added backslashes get doubled)",
+    "No SQL text is built from the search text",
+    "add_users uses one executemany inside one transaction"
+  ]
+}

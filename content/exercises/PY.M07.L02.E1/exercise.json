@@ -1,0 +1,43 @@
+{
+  "id": "PY.M07.L02.E1",
+  "lesson": "PY.M07.L02",
+  "title": "A connection pool lease as a context manager",
+  "problem": "Pool holds a list of free connections. Implement Pool.lease() with @contextmanager so that `with pool.lease() as conn:` takes a connection and always gives it back when the block ends: normally, by an early return, or by an exception (which must still reach the caller). An empty pool raises RuntimeError(\"pool exhausted\") and must not change the pool.",
+  "requirements": [
+    "lease() is a generator decorated with @contextmanager that yields exactly once",
+    "On enter, take the first connection from self.free (index 0) and yield it",
+    "On exit, put that connection back into self.free, whether the block finished, returned early or raised",
+    "Exceptions from the with block propagate to the caller (don't swallow them)",
+    "If self.free is empty, raise RuntimeError(\"pool exhausted\") and leave self.free unchanged",
+    "Each leased connection is returned exactly once"
+  ],
+  "contract": "Pool(connections: Iterable[str]); pool.free: list[str]; pool.lease() -> context manager yielding str",
+  "expectedBehavior": "pool = Pool(['c1', 'c2']); inside `with pool.lease() as conn:` conn == 'c1' and pool.free == ['c2']; after the block sorted(pool.free) == ['c1', 'c2']",
+  "edgeCases": [
+    "The with block raises: connection returned and the exception still propagates",
+    "return inside the with block",
+    "Nested leases from the same pool",
+    "Empty pool, and a pool that becomes exhausted while a lease is active",
+    "Many leases in a row"
+  ],
+  "tests": [
+    "test_lease_gives_first_free_connection",
+    "test_nested_leases_get_different_connections",
+    "test_connection_returned_when_block_raises",
+    "test_connection_returned_on_early_return",
+    "test_empty_pool_raises",
+    "test_exhausted_pool_is_not_corrupted",
+    "test_pool_reusable_many_times"
+  ],
+  "hints": [
+    "Conceptual: the code before yield is __enter__, the code after it is __exit__. If the block raises, the exception reappears at the yield, so only cleanup inside a finally is guaranteed to run.",
+    "Specific: decide what belongs inside the try and what must come before it. If taking a connection fails, there is nothing to give back, so the 'give back' code must not run for that case.",
+    "Implementation: if the list is empty, raise the RuntimeError; otherwise pop index 0 into a variable; then try: yield it; finally: append it back."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "Cleanup is in a finally block, and acquisition happens before the try",
+    "No exception is caught and swallowed",
+    "No special-casing of test inputs"
+  ]
+}

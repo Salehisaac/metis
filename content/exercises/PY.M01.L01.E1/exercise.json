@@ -1,0 +1,37 @@
+{
+  "id": "PY.M01.L01.E1",
+  "lesson": "PY.M01.L01",
+  "title": "Make wordcount.py importable and runnable",
+  "problem": "wordcount.py counts the words given on the command line, but all its work happens at the top level, so importing it (as pytest does) runs it. Refactor it so importing is silent, running it still works, and running it without words prints a usage message.",
+  "requirements": [
+    "Importing wordcount prints nothing",
+    "Add main(argv: list[str]) -> int that prints the word count of argv[1:] and returns 0",
+    "With no words, main prints a usage line to stderr (nothing to stdout) and returns 2",
+    "Running python3 wordcount.py WORDS... exits with main's return value",
+    "Keep count_words unchanged"
+  ],
+  "contract": "main(argv: list[str]) -> int   # argv is like sys.argv: argv[0] is the script name",
+  "expectedBehavior": "python3 wordcount.py go 'py go' prints 3 and exits 0; python3 wordcount.py prints a line containing 'usage' to stderr and exits 2",
+  "edgeCases": [
+    "No arguments at all: usage on stderr, exit code 2, empty stdout",
+    "An argument containing spaces ('py go') still counts as separate words",
+    "Being imported by a test must not read sys.argv or print"
+  ],
+  "tests": [
+    "test_import_prints_nothing",
+    "test_main_prints_count_and_returns_0",
+    "test_script_counts_words",
+    "test_script_without_words_shows_usage"
+  ],
+  "hints": [
+    "Conceptual: code at the top level runs on every import. Only code under the __main__ guard runs just when the file is the program.",
+    "Specific: move the two top-level lines into a function main(argv) and call it from `if __name__ == \"__main__\":` with sys.exit(main(sys.argv)).",
+    "Implementation: in main, take words = argv[1:]; if not words, print the usage with file=sys.stderr and return 2; otherwise print(count_words(\" \".join(words))) and return 0."
+  ],
+  "evaluation": [
+    "All four tests pass",
+    "The __main__ block only calls sys.exit(main(sys.argv))",
+    "Usage goes to stderr, results go to stdout",
+    "No behaviour at the top level besides imports and definitions"
+  ]
+}

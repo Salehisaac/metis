@@ -1,0 +1,43 @@
+{
+  "id": "AS.M02.L04.E1",
+  "lesson": "AS.M02.L04",
+  "title": "Crawl with a concurrency limit",
+  "problem": "Write fetch_many: download a list of URLs concurrently, but never have more than `limit` requests in flight, so you don't overload the remote server or run out of connections. Results must come back in the order of the input URLs.",
+  "requirements": [
+    "Return the fetched bodies in input order",
+    "At most `limit` fetches are in flight at any moment",
+    "Use the limit fully: with more URLs than `limit`, exactly `limit` fetches run at once at some point",
+    "Raise ValueError if limit < 1",
+    "Errors from fetch propagate (inside an ExceptionGroup is fine)"
+  ],
+  "contract": "async def fetch_many(urls: list[str], fetch: Callable[[str], Awaitable[str]], limit: int) -> list[str]",
+  "expectedBehavior": "fetch_many([12 URLs], fetch, limit=3) returns 12 bodies in input order, and the fake site saw a peak of exactly 3 concurrent requests.",
+  "edgeCases": [
+    "Empty list: [] and no fetches",
+    "limit larger than the number of URLs: all run at once",
+    "limit == 1: strictly one at a time",
+    "limit 0 or negative: ValueError",
+    "A fetch raises ConnectionError: it reaches the caller"
+  ],
+  "tests": [
+    "test_results_in_input_order",
+    "test_never_more_than_limit",
+    "test_uses_the_whole_limit",
+    "test_limit_larger_than_work",
+    "test_limit_one_is_sequential",
+    "test_empty_list",
+    "test_bad_limit",
+    "test_fetch_error_propagates"
+  ],
+  "hints": [
+    "Conceptual: start a task for every URL, but make each one acquire a permit before calling fetch and give it back afterwards. The number of permits is the limit, exactly like a buffered channel used as a semaphore in Go.",
+    "Specific: create one asyncio.Semaphore(limit) per call of fetch_many and write a small inner coroutine that does `async with` on it around `await fetch(url)`. Run one of those per URL with a TaskGroup or gather.",
+    "Implementation: check limit first; define `async def one(url): async with sem: return await fetch(url)`; create tasks with a TaskGroup in URL order and return [t.result() for t in tasks]."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "The semaphore is created inside fetch_many (not a module-level global shared by all callers)",
+    "Permits are released via async with, so an error can't leak a permit",
+    "Results are in input order"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "AS.M01.L03.E1",
+  "lesson": "AS.M01.L03",
+  "title": "Call a blocking client without blocking the loop",
+  "problem": "locate_all looks up coordinates for a list of cities with a geocode function from a sync-only library. Each call blocks its thread while it waits for the network. The current version calls geocode directly on the event loop's thread, so the whole service freezes during each lookup, and it also geocodes the same city repeatedly. Fix both problems.",
+  "requirements": [
+    "Return {city: geocode(city)} for each distinct city, keyed in first-seen order",
+    "Every geocode call runs in a worker thread, never on the event loop's thread",
+    "Each distinct city is geocoded exactly once",
+    "An exception raised by geocode reaches the caller of locate_all unchanged",
+    "locate_all stays async def"
+  ],
+  "contract": "async def locate_all(cities: list[str], geocode: Callable[[str], tuple[float, float]]) -> dict[str, tuple[float, float]]",
+  "expectedBehavior": "With a geocoder that blocks 0.15 s per call, a heartbeat task on the same loop keeps ticking (at least 5 times) while locate_all(['Tehran', 'Oslo'], geocode) runs.",
+  "edgeCases": [
+    "Empty list: {} and geocode is never called",
+    "Duplicates (Oslo, Oslo, Rome, Oslo): two calls, result keys ['Oslo', 'Rome']",
+    "geocode raises LookupError: locate_all raises the same LookupError"
+  ],
+  "tests": [
+    "test_results",
+    "test_geocode_runs_off_the_loop_thread",
+    "test_loop_stays_responsive",
+    "test_duplicates_geocoded_once",
+    "test_empty_list_makes_no_calls",
+    "test_errors_propagate"
+  ],
+  "hints": [
+    "Conceptual: a blocking call holds its thread until it returns. If that thread runs the event loop, every task waits. Move the call to another thread and await the result.",
+    "Specific: asyncio.to_thread(func, *args) runs func(*args) in a worker thread and gives you an awaitable for its return value; exceptions come back through the await.",
+    "Implementation: loop over cities, skip a city already in the result dict, otherwise store `await asyncio.to_thread(geocode, city)` under it."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "geocode is never called directly from the coroutine",
+    "No try/except that hides geocode's errors",
+    "The learner can explain why to_thread helps here but would not speed up pure-Python CPU work"
+  ]
+}

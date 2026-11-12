@@ -1,0 +1,38 @@
+{
+  "id": "AS.M03.L01.E1",
+  "lesson": "AS.M03.L01",
+  "title": "Unblock the shipping-quote API",
+  "problem": "shipping.py serves shipping quotes. Both endpoints are async def, but they call carrier_quote, a blocking function from a sync-only SDK, directly. Under load, one slow carrier call freezes every request. Fix both endpoints so the blocking call never runs on the event loop's thread, while the async exchange_rate call is still awaited.",
+  "requirements": [
+    "GET /quote/{country} returns {\"country\": ..., \"eur\": price}, or 404 if carrier_quote returns None",
+    "GET /quote/{country}/{currency} returns the price converted with exchange_rate, rounded to 2 decimals, under the lowercased currency key, or 404",
+    "carrier_quote never runs on the event loop's thread",
+    "Two requests can be in carrier_quote at the same time",
+    "exchange_rate is still awaited (it is async); don't change carrier_quote, exchange_rate or RATES"
+  ],
+  "contract": "GET /quote/{country} -> 200 {country, eur} | 404\nGET /quote/{country}/{currency} -> 200 {country, <currency lowercased>} | 404",
+  "expectedBehavior": "GET /quote/US/USD returns {\"country\": \"US\", \"usd\": 27.5}. Two concurrent requests whose carrier calls each wait for the other both succeed (the starter fails one with a 500 after 1 s).",
+  "edgeCases": [
+    "Unknown country on both endpoints: 404",
+    "An endpoint that needs both a blocking call and an await",
+    "The tests call carrier_quote through the module (they replace it with a fake), so look it up by name at call time"
+  ],
+  "tests": [
+    "test_quote_values",
+    "test_unknown_country_is_404",
+    "test_quotes_are_served_concurrently",
+    "test_converted_quotes_are_served_concurrently",
+    "test_sdk_never_runs_on_the_loop_thread"
+  ],
+  "hints": [
+    "Conceptual: FastAPI calls async def endpoints directly on the event loop, so a blocking call inside one blocks every request. It runs plain def endpoints in a threadpool.",
+    "Specific: an endpoint that only does blocking work can simply become def. An endpoint that must also await something has to stay async def, so move just the blocking call to a thread.",
+    "Implementation: change `async def quote` to `def quote`. In quote_in, replace the direct call with `price = await asyncio.to_thread(carrier_quote, country)`."
+  ],
+  "evaluation": [
+    "All five tests pass",
+    "No blocking call left directly inside an async def endpoint",
+    "No asyncio.run inside an endpoint",
+    "The learner can explain which endpoint got which fix and why"
+  ]
+}

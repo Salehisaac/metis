@@ -1,0 +1,37 @@
+{
+  "id": "PY.M02.L01.E1",
+  "lesson": "PY.M02.L01",
+  "title": "Fix the audit log: same value vs same object",
+  "problem": "audit.py compares two versions of a user record and keeps a history of snapshots. Some tests fail. Run pytest, draw the labels for each failing test, and fix the two functions. Don't change the tests.",
+  "requirements": [
+    "changed_fields returns the keys whose values differ, in the key order of old",
+    "Equal values count as unchanged, even when they are separate objects",
+    "save_version appends to history in place and returns None",
+    "A saved snapshot must not change when the caller later changes the record",
+    "Don't modify test_audit.py"
+  ],
+  "contract": "changed_fields(old: dict, new: dict) -> list[str]; save_version(history: list, record: dict) -> None",
+  "expectedBehavior": "changed_fields({'langs': ['go']}, {'langs': ['go']}) == []; after save_version(h, r) then r['role'] = 'lead', h[0] still has the old role",
+  "edgeCases": ["Equal lists that are different objects", "None values", "Empty records", "Changing the record after saving it"],
+  "tests": [
+    "test_changed_value_is_reported",
+    "test_equal_lists_are_not_a_change",
+    "test_result_follows_old_key_order",
+    "test_none_values",
+    "test_empty_records",
+    "test_history_grows_in_place",
+    "test_snapshot_survives_later_changes",
+    "test_snapshot_is_a_different_object"
+  ],
+  "hints": [
+    "Conceptual: there are two bugs. One function asks 'same object?' where it should ask 'same value?'. The other stores a second label for the caller's dict instead of a separate object.",
+    "Specific: in test_equal_lists_are_not_a_change, old['langs'] and new['langs'] are two different list objects with equal items (L01 section 3). In the snapshot tests, draw history[0] and record after save_version: how many dicts are there? (section 5)",
+    "Implementation: compare with != instead of is not. Append a new dict built from the record (dict(...) or .copy()) instead of the record itself."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "The tests are unchanged",
+    "changed_fields compares values with ==/!=, not identity",
+    "save_version stores a separate dict and still mutates history in place"
+  ]
+}

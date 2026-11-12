@@ -1,0 +1,39 @@
+{
+  "id": "ARCH.M03.L01.E1",
+  "lesson": "ARCH.M03.L01",
+  "title": "Move the welcome email off the request path",
+  "problem": "POST /signups saves the user and then sends a welcome email inline. The client waits for SMTP (2 s), and when SMTP fails the client gets a 500 even though the user was saved. Move the email into a FastAPI background task that can't break the signup, and return 409 for a duplicate email.",
+  "requirements": [
+    "signup queues exactly one background task (send_welcome_safely) instead of sending inline",
+    "The task is queued only after the INSERT committed; a duplicate email returns 409 {\"detail\": \"email already registered\"} and queues nothing",
+    "send_welcome_safely(mailer, email) calls mailer.send_welcome(email); if it raises, log on the 'signup' logger (WARNING or higher, message contains the email) and return normally",
+    "Keep the endpoint's signature (tests call it directly) and keep 201 {\"email\": <normalised email>} for a new signup",
+    "Emails are normalised with strip().lower() before saving"
+  ],
+  "contract": "signup(body: SignupIn, background_tasks: BackgroundTasks, conn, mailer) -> dict\nsend_welcome_safely(mailer, email: str) -> None",
+  "expectedBehavior": "Calling signup directly with a fresh BackgroundTasks leaves mailer.sent empty and tasks.tasks with one entry; running the tasks then sends the email. Through TestClient a failing mailer still gives 201 and a log line naming the email.",
+  "edgeCases": [
+    "SMTP failure: signup still 201, user saved, failure logged with the email",
+    "Duplicate email in a different case: 409, no second welcome email",
+    "The email must not be sent before the handler returns"
+  ],
+  "tests": [
+    "test_signup_saves_user_and_returns_201",
+    "test_email_is_deferred_not_sent_inline",
+    "test_email_is_sent_after_the_request",
+    "test_mail_failure_does_not_break_signup",
+    "test_send_welcome_safely_logs_instead_of_raising",
+    "test_duplicate_signup_is_409_and_sends_nothing"
+  ],
+  "hints": [
+    "Conceptual: a background task runs after the response is sent, so its result and its exceptions can no longer reach the client. That's why the task itself must handle its failure, and why it should only be queued once the thing it announces (the saved user) is certain.",
+    "Specific: background_tasks.add_task(func, *args) queues func(*args). Queue send_welcome_safely with the mailer and the email after the `with conn:` block. Catch sqlite3.IntegrityError around that block for the 409.",
+    "Implementation: in send_welcome_safely, wrap mailer.send_welcome(email) in try/except Exception and call log.exception('welcome email to %s failed', email) (or log.warning). In signup: try the insert, except IntegrityError raise HTTPException(409, 'email already registered'); then background_tasks.add_task(send_welcome_safely, mailer, email); return {'email': email}."
+  ],
+  "evaluation": [
+    "All 6 tests pass",
+    "No email work happens inside the request handler",
+    "Failures in the task are logged with enough detail to resend",
+    "The task is queued only after a successful commit"
+  ]
+}

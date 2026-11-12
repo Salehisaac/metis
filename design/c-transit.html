@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metis Transit (UI preview C)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#14223B; --panel:#1C2E4E; --line:#2C426A; --text:#EAF1FF; --muted:#9FB0CF;
+  --py:#FFD43B; --db:#F28C28; --web:#2EC4B6; --as:#B388FF; --arch:#FF6FB5; --ops:#3DDC84; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 "Barlow", system-ui, sans-serif; }
+.top { display:flex; align-items:center; gap:14px; padding:16px 32px; }
+.roundel { display:flex; align-items:center; gap:12px; font:700 26px "Barlow Condensed"; letter-spacing:.02em; }
+.top .chip { margin-left:auto; font-size:12px; color:var(--muted); border:1px dashed var(--line); border-radius:999px; padding:2px 10px; }
+.wrap { max-width:1200px; margin:0 auto; padding:0 32px 40px; display:grid; grid-template-columns:2fr 1fr; gap:22px; }
+.map { grid-column:1 / -1; background:var(--panel); border-radius:22px; padding:22px 26px 10px; position:relative; }
+.map h1 { font:700 34px/1.1 "Barlow Condensed"; margin:0; } .map p { color:var(--muted); margin:4px 0 6px; }
+.map svg { width:100%; height:auto; display:block; }
+.ln { fill:none; stroke-width:9; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:1400; stroke-dashoffset:1400; animation:draw 1.6s ease-out forwards; }
+.ln.db{animation-delay:.25s} .ln.web{animation-delay:.45s} .ln.as{animation-delay:.6s} .ln.arch{animation-delay:.75s} .ln.ops{animation-delay:.9s}
+@keyframes draw { to { stroke-dashoffset:0; } }
+.st { fill:var(--bg); stroke:var(--text); stroke-width:3; } .st.done { fill:var(--text); }
+.lbl { fill:var(--muted); font:500 13px "Barlow"; } .lbl.big { fill:var(--text); font:700 15px "Barlow Condensed"; }
+.train { offset-path:path("M60 70 H 250"); offset-rotate:0deg; animation:ride 1.6s 1.4s cubic-bezier(.4,0,.2,1) both; }
+@keyframes ride { from { offset-distance:0% } to { offset-distance:100% } }
+.here { opacity:0; animation:fade .4s 3s forwards; } @keyframes fade { to { opacity:1; } }
+.card { background:var(--panel); border-radius:18px; padding:20px 22px; }
+.card h2 { font:700 20px "Barlow Condensed"; margin:0 0 10px; }
+.next { align-self:start; display:flex; align-items:center; gap:18px; border-left:8px solid var(--py); }
+.next .go { margin-left:auto; background:var(--py); color:#1A1A1A; font:700 16px "Barlow Condensed"; border-radius:999px; padding:10px 20px; }
+.heat { display:grid; grid-template-columns:auto repeat(4, 30px); gap:6px 8px; align-items:center; font-size:14px; }
+.heat .h { color:var(--muted); font-size:12px; text-align:center; }
+.cell { width:30px; height:22px; border-radius:5px; background:var(--line); transform:scale(.4); opacity:0; animation:cell .35s ease-out forwards; }
+.s1{background:#3E5B8F} .s2{background:#5C8FD6} .na{background:transparent; border:1px dashed var(--line)}
+@keyframes cell { to { transform:none; opacity:1; } }
+.week { display:flex; gap:6px; margin-top:6px; } .week i { width:26px; height:26px; border-radius:6px; background:var(--line); } .week i.on { background:var(--ops); }
+.side { display:grid; gap:22px; align-content:start; }
+.ring { display:flex; align-items:center; gap:16px; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration:0s !important; animation-delay:0s !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="roundel"><svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#FFD43B" stroke-width="6"/><rect x="0" y="15" width="40" height="10" rx="2" fill="#00ADD8"/><text x="20" y="24" text-anchor="middle" font-family="Barlow Condensed" font-weight="700" font-size="10" fill="#14223B">METIS</text></svg>Metis Transit</div>
+  <span class="chip">preview · sample progress</span>
+</header>
+<div class="wrap">
+  <section class="map" aria-label="Learning map">
+    <h1>Your route to backend engineer</h1>
+    <p>Six lines, 31 stations. You're on the Python line.</p>
+    <svg viewBox="0 0 1100 300" role="img" aria-label="Metro map of the six courses">
+      <path class="ln" style="stroke:var(--py)" d="M60 70 H 470 Q 500 70 500 100 V 130"/>
+      <path class="ln db" style="stroke:var(--db)" d="M500 130 H 820 Q 850 130 850 160 V 230 H 1040"/>
+      <path class="ln web" style="stroke:var(--web)" d="M500 130 V 230 H 820"/>
+      <path class="ln as" style="stroke:var(--as)" d="M600 230 Q 630 230 630 260 H 760"/>
+      <path class="ln arch" style="stroke:var(--arch)" d="M820 230 Q 850 230 850 200 H 1040"/>
+      <path class="ln ops" style="stroke:var(--ops)" d="M940 230 V 280 H 1060"/>
+      <g>
+        <circle class="st done" cx="60" cy="70" r="11"/><circle class="st done" cx="160" cy="70" r="11"/><circle class="st" cx="250" cy="70" r="11"/><circle class="st" cx="340" cy="70" r="11"/><circle class="st" cx="430" cy="70" r="11"/>
+        <circle class="st" cx="500" cy="130" r="13"/><circle class="st" cx="660" cy="130" r="11"/><circle class="st" cx="760" cy="130" r="11"/>
+        <circle class="st" cx="620" cy="230" r="11"/><circle class="st" cx="720" cy="230" r="11"/><circle class="st" cx="820" cy="230" r="13"/><circle class="st" cx="960" cy="230" r="11"/><circle class="st" cx="1040" cy="200" r="11"/>
+      </g>
+      <text class="lbl" x="44" y="48">Setup</text><text class="lbl" x="140" y="48">Names</text><text class="lbl big" x="226" y="48">Data</text><text class="lbl" x="318" y="48">Errors</text><text class="lbl" x="408" y="48">Classes</text>
+      <text class="lbl" x="516" y="122">PRJ-01</text><text class="lbl" x="640" y="118">SQL</text><text class="lbl" x="728" y="118">JOINs</text>
+      <text class="lbl" x="560" y="214">Routing</text><text class="lbl" x="704" y="254">Pydantic</text><text class="lbl" x="836" y="254">PRJ-03</text>
+      <g class="train"><rect x="-16" y="-9" width="32" height="18" rx="9" fill="#00ADD8" stroke="#14223B" stroke-width="3"/></g>
+      <g class="here"><rect x="214" y="88" width="76" height="22" rx="11" fill="#FFD43B"/><text x="252" y="104" text-anchor="middle" font-family="Barlow Condensed" font-weight="700" font-size="13" fill="#14223B">YOU'RE HERE</text></g>
+    </svg>
+  </section>
+  <section class="card next" aria-label="Next stop">
+    <div><h2>Next stop: Data structures and strings</h2><div style="color:var(--muted)">PY.M03 · 5 lessons · slicing, dicts, sorting with tie-breaks</div></div>
+    <span class="go">Board lesson 1</span>
+  </section>
+  <div class="side">
+    <section class="card" aria-label="Skills"><h2>Skills from ASM-1</h2>
+      <div class="heat">
+        <span></span><span class="h">A</span><span class="h">B</span><span class="h">C</span><span class="h">D</span>
+        <span>Python</span><i class="cell s1" style="animation-delay:1.2s"></i><i class="cell na" style="animation-delay:1.25s"></i><i class="cell na" style="animation-delay:1.3s"></i><i class="cell na" style="animation-delay:1.35s"></i>
+        <span>HTTP</span><i class="cell s2" style="animation-delay:1.4s"></i><i class="cell na" style="animation-delay:1.45s"></i><i class="cell na" style="animation-delay:1.5s"></i><i class="cell na" style="animation-delay:1.55s"></i>
+        <span>Transactions</span><i class="cell" style="animation-delay:1.6s"></i><i class="cell na" style="animation-delay:1.65s"></i><i class="cell na" style="animation-delay:1.7s"></i><i class="cell na" style="animation-delay:1.75s"></i>
+      </div>
+    </section>
+    <section class="card" aria-label="This week"><h2>This week</h2><div class="week"><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i></i></div><p style="color:var(--muted); margin:10px 0 0">1 review due tomorrow</p></section>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "id": "PY.M05.L04.E1",
+  "lesson": "PY.M05.L04",
+  "title": "Refactor Playlist from inheritance to composition",
+  "problem": "Playlist subclasses list and overrides append() to refuse duplicates, but duplicates still get in through extend, insert, += and item assignment. Rewrite Playlist so that it HAS a list instead of BEING one, and exposes only operations that keep the no-duplicates rule.",
+  "requirements": [
+    "Playlist no longer inherits from list; it keeps its tracks in a private attribute created in __init__",
+    "add(track) -> bool: appends the track and returns True, or returns False (changing nothing) if it's already there",
+    "add_many(tracks) -> int: adds each track in order with the same rule and returns how many were actually added",
+    "remove(track) -> bool: removes the track and returns True, or returns False if it isn't there",
+    "len(p), `track in p` and `for t in p` work, in play order",
+    "tracks is a read-only property returning a tuple snapshot, so callers can't mutate the internal list",
+    "No append, extend, insert, += or item assignment on Playlist"
+  ],
+  "contract": "class Playlist: __init__(self) -> None; add(self, track: str) -> bool; add_many(self, tracks: Iterable[str]) -> int; remove(self, track: str) -> bool; tracks -> tuple[str, ...] (property); __len__; __iter__; __contains__",
+  "expectedBehavior": "p = Playlist(); p.add('a') is True; p.add('a') is False; p.add_many(['b', 'a', 'c', 'b']) == 2; list(p) == ['a', 'b', 'c']; p.tracks == ('a', 'b', 'c'); isinstance(p, list) is False",
+  "edgeCases": [
+    "Duplicates inside the add_many input itself: ['b', 'b'] adds one",
+    "add_many([]) returns 0",
+    "Removing a track that isn't there returns False and changes nothing",
+    "A snapshot taken from tracks doesn't change when the playlist changes later",
+    "Two playlists don't share tracks"
+  ],
+  "tests": [
+    "test_add_returns_whether_added",
+    "test_add_many_skips_duplicates_and_counts",
+    "test_remove",
+    "test_len_in_and_iteration_order",
+    "test_tracks_is_a_read_only_snapshot",
+    "test_is_not_a_list_and_has_no_bypass",
+    "test_playlists_are_independent"
+  ],
+  "hints": [
+    "Conceptual: with inheritance, Playlist gets every list method, including the ones that break your rule. With composition it gets only what you write. Put the rule in exactly one method and route every other way of adding through it.",
+    "Specific: class Playlist: with self._tracks = [] in __init__. add_many should call add for each track, so the rule lives only in add. len, in and for need the dunder methods __len__, __contains__ and __iter__ (section 4 shows two of them on a different class).",
+    "Implementation: add checks `if track in self._tracks: return False` before appending; add_many can be sum(self.add(t) for t in tracks), since True counts as 1; tracks returns tuple(self._tracks); __iter__ returns iter(self._tracks)."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "Playlist doesn't subclass list (or any other collection)",
+    "The duplicate check exists in one place, and add_many reuses add",
+    "No method hands out the internal list itself"
+  ]
+}

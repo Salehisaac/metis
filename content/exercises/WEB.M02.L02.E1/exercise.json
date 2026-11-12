@@ -1,0 +1,50 @@
+{
+  "id": "WEB.M02.L02.E1",
+  "lesson": "WEB.M02.L02",
+  "title": "A sign-up request model with constraints and validators",
+  "problem": "signup.py declares SignupRequest with bare types. Add the constraints and validators below so the model enforces the sign-up rules on its own, in the right order.",
+  "requirements": [
+    "username: whitespace stripped and lower-cased BEFORE the checks; then 3 to 20 characters, only a-z, 0-9 and _",
+    "display_name: whitespace stripped BEFORE the checks; then 1 to 50 characters",
+    "password: 8 to 64 characters, not stripped; must contain at least one letter and one digit, otherwise a ValueError whose message contains 'letter and a digit'",
+    "password_confirm must equal password, otherwise a model-level ValueError whose message contains 'passwords do not match'",
+    "Unknown fields are rejected (extra_forbidden)",
+    "Errors use Pydantic's types: string_too_short, string_too_long, string_pattern_mismatch, string_type, value_error"
+  ],
+  "contract": "SignupRequest(username: str, display_name: str, password: str, password_confirm: str)  # raises pydantic.ValidationError",
+  "expectedBehavior": "username '  Sara_99 ' -> 'sara_99'; username '  ab  ' -> string_too_short; password 'longpassword' -> value_error at ('password',); mismatching confirmation -> value_error at ()",
+  "edgeCases": [
+    "'  ab  ' is too short after stripping, even though it has 6 characters",
+    "'ALI' is valid, because it is lower-cased before the pattern check",
+    "username 123 (not a string) gives string_type, not a crash",
+    "display_name of only spaces is too short",
+    "A password with spaces keeps them",
+    "If the password itself is invalid, no 'do not match' error is added"
+  ],
+  "tests": [
+    "test_valid_signup_is_normalised",
+    "test_username_is_normalised_before_length_and_pattern_checks",
+    "test_username_allowed_characters",
+    "test_username_that_is_not_a_string",
+    "test_display_name_is_stripped_then_checked",
+    "test_password_length",
+    "test_password_needs_a_letter_and_a_digit[longpassword]",
+    "test_password_needs_a_letter_and_a_digit[12345678]",
+    "test_password_needs_a_letter_and_a_digit[--------]",
+    "test_password_is_not_stripped",
+    "test_confirmation_must_match",
+    "test_no_mismatch_error_when_password_itself_is_invalid",
+    "test_unknown_fields_are_rejected"
+  ],
+  "hints": [
+    "Conceptual: sort the rules into three groups: built-in constraints (lengths, pattern), normalising that must happen before them, and checks that need the finished value or several fields.",
+    "Specific: Field(min_length=..., max_length=..., pattern=r\"^...$\") for the limits; @field_validator(..., mode=\"before\") for strip/lower, with an isinstance(raw, str) guard; a plain (after) @field_validator(\"password\"); and @model_validator(mode=\"after\") for the confirmation.",
+    "Implementation: the password check can use any(ch.isalpha() for ch in password) and any(ch.isdigit() for ch in password). Every validator returns the value (the model validator returns self), and each rejection is raise ValueError(\"...\")."
+  ],
+  "evaluation": [
+    "All tests pass",
+    "Normalisation happens in before validators, so constraints see the normalised value",
+    "Every validator returns its value; the model validator returns self",
+    "The password is never modified"
+  ]
+}

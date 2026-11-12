@@ -1,0 +1,14 @@
+# In a real repository this file lives at .github/workflows/ci.yml.
+# It never runs on push, and when started by hand it fails before testing anything.
+name: CI
+
+on: workflow_dispatch
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-python@v7
+        with:
+          python-version: 3.10
+      - run: pytest

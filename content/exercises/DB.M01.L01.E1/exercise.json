@@ -1,0 +1,45 @@
+{
+  "id": "DB.M01.L01.E1",
+  "lesson": "DB.M01.L01",
+  "title": "Four SELECTs on the message table",
+  "problem": "queries.py has four empty SQL strings. Write each SELECT so the tests, which run it with ? parameters against the sample messaging data in chatdb.py, get exactly the expected rows in exactly the expected order.",
+  "requirements": [
+    "Edit only queries.py; chatdb.py is the shared sample database",
+    "UNEDITED_BY_SENDER: columns id, body; messages from one sender whose edited_at is NULL; ordered by id",
+    "LATEST_IN_CHAT: columns id, sent_at; the n newest messages in one chat; equal sent_at broken by the higher id first",
+    "IN_CHAT_FROM_EITHER: column id; messages in one chat whose sender is either of two users; ordered by id",
+    "USERS_PAGE: column username; alphabetical; page size and number of rows to skip come from the parameters",
+    "Use ? placeholders for every value, in the order given in the comments"
+  ],
+  "contract": "Each constant is one SELECT statement as a str. Parameters: UNEDITED_BY_SENDER (sender_id,), LATEST_IN_CHAT (chat_id, n), IN_CHAT_FROM_EITHER (chat_id, user_a, user_b), USERS_PAGE (page_size, rows_to_skip)",
+  "expectedBehavior": "LATEST_IN_CHAT with (1, 3) returns [(16, '2026-11-09 08:00:00'), (15, '2026-11-09 08:00:00'), (13, '2026-11-08 18:00:00')]; USERS_PAGE with (2, 2) returns [('chen',), ('dara',)]",
+  "edgeCases": [
+    "A sender with no messages: empty list, not an error",
+    "Two messages with the same sent_at (tie-break needed)",
+    "n larger than the number of rows: all rows, no error",
+    "A chat with no messages",
+    "A user who also wrote in other chats (operator precedence)",
+    "A page past the last row: empty list"
+  ],
+  "tests": [
+    "test_unedited_by_sender",
+    "test_unedited_by_sender_without_messages",
+    "test_latest_in_chat_breaks_ties_by_id",
+    "test_latest_in_chat_when_n_exceeds_rows",
+    "test_latest_in_empty_chat",
+    "test_in_chat_from_either_stays_in_the_chat",
+    "test_in_chat_from_either_other_chat",
+    "test_users_page",
+    "test_users_last_page_and_past_the_end"
+  ],
+  "hints": [
+    "Conceptual: each requirement maps to one clause. Which rows: WHERE. Which order: ORDER BY (with a second key for ties). How many: LIMIT/OFFSET. NULL is never equal to anything, so it needs its own operator.",
+    "Specific: edited_at needs IS NULL, not = NULL. 'Newest first, then higher id' is two ORDER BY keys, both DESC. AND binds tighter than OR, so 'this chat and (sender a or sender b)' needs parentheses.",
+    "Implementation: the shape is SELECT cols FROM messages WHERE ... ORDER BY key1 DESC, key2 DESC LIMIT ?. For the page, LIMIT ? OFFSET ? takes (page_size, rows_to_skip) in that order. Run pytest after each query, not after all four."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "Every value is a ? placeholder; no numbers or names typed into the SQL",
+    "Every query that returns more than one row has an ORDER BY that makes the order fully defined"
+  ]
+}

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metis Studio (UI preview A)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#20243A; --panel:#2A2F4E; --panel2:#323863; --line:#3D4470; --text:#E6E8F4; --muted:#A3A8C8; --cyan:#00ADD8; --yellow:#FFD43B; --ok:#5BD69B; --bad:#FF7A90; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 "IBM Plex Sans", system-ui, sans-serif; height:100vh; display:grid; grid-template-rows:44px 1fr 30px; overflow:hidden; }
+code, .mono { font-family:"JetBrains Mono", monospace; }
+.top { display:flex; align-items:center; gap:14px; padding:0 14px; border-bottom:1px solid var(--line); }
+.logo { display:flex; align-items:center; gap:8px; font-weight:600; letter-spacing:.02em; }
+.palette { margin-left:auto; display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:5px 12px; color:var(--muted); width:380px; }
+.palette kbd { margin-left:auto; font:12px "JetBrains Mono"; border:1px solid var(--line); border-radius:4px; padding:0 5px; }
+.main { display:grid; grid-template-columns:250px 1fr 290px; min-height:0; }
+.tree { background:var(--panel); border-right:1px solid var(--line); padding:12px 8px; font-size:14px; overflow:auto; }
+.tree h2 { font-size:12px; color:var(--muted); font-weight:500; margin:4px 8px 8px; }
+.tree ul { list-style:none; margin:0; padding:0 0 0 12px; }
+.tree li { padding:3px 8px; border-radius:6px; display:flex; gap:8px; align-items:center; }
+.tree li.cur { background:var(--panel2); box-shadow:inset 2px 0 var(--yellow); }
+.dot { width:9px; height:9px; border-radius:50%; flex:none; border:2px solid var(--muted); }
+.dot.done { background:var(--ok); border-color:var(--ok); } .dot.half { background:linear-gradient(90deg,var(--yellow) 50%,transparent 50%); border-color:var(--yellow); }
+.editor { display:grid; grid-template-rows:38px 1fr; min-width:0; }
+.tabs { display:flex; border-bottom:1px solid var(--line); background:var(--panel); }
+.tab { padding:8px 16px; font-size:13px; color:var(--muted); border-right:1px solid var(--line); }
+.tab.on { color:var(--text); background:var(--bg); box-shadow:inset 0 2px var(--cyan); }
+.doc { padding:26px 40px; overflow:auto; max-width:780px; }
+.doc h1 { font-size:26px; line-height:1.25; margin:0 0 4px; font-weight:600; }
+.crumb { color:var(--muted); font-size:13px; margin-bottom:20px; }
+.term { background:#181B2E; border:1px solid var(--line); border-radius:10px; padding:14px 16px; font:14px/1.7 "JetBrains Mono", monospace; }
+.term .prompt { color:var(--cyan); } .typed { border-right:2px solid var(--yellow); white-space:pre; overflow:hidden; display:inline-block; width:0; animation:type 1.1s steps(9) .4s forwards, caret .8s step-end 1.5s 3; vertical-align:bottom; }
+.dots span { opacity:0; display:inline-block; } .dots span:nth-child(1){animation:pop .2s 1.8s forwards} .dots span:nth-child(2){animation:pop .2s 2.05s forwards} .dots span:nth-child(3){animation:pop .2s 2.3s forwards}
+.pass { color:var(--ok); } .sum { opacity:0; animation:pop .3s 2.7s forwards; }
+@keyframes type { to { width:9ch; } } @keyframes caret { 50% { border-color:transparent; } } @keyframes pop { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none} }
+.quiz { margin-top:22px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+.quiz header { background:var(--panel); padding:8px 14px; font:13px "JetBrains Mono"; color:var(--yellow); display:flex; justify-content:space-between; }
+.quiz .body { padding:14px; } .opt { display:flex; gap:10px; padding:6px 10px; border-radius:6px; } .opt.sel { background:rgba(91,214,155,.12); outline:1px solid var(--ok); }
+.result { font:600 13px "JetBrains Mono"; color:var(--ok); }
+.side { border-left:1px solid var(--line); padding:16px; background:var(--panel); font-size:14px; }
+.side h3 { font-size:13px; color:var(--muted); font-weight:500; margin:0 0 10px; }
+.ring { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+.bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin:4px 0 12px; } .bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--yellow)); animation:fill 1.6s .6s ease-out forwards; }
+@keyframes fill { to { width:var(--w); } }
+.status { display:flex; gap:18px; align-items:center; padding:0 14px; font:12px "JetBrains Mono"; background:var(--cyan); color:#0E2230; }
+.status b { font-weight:600; } .status .r { margin-left:auto; }
+.chip { font:11px "JetBrains Mono"; color:var(--muted); border:1px dashed var(--line); border-radius:4px; padding:1px 6px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0s !important; animation-delay:0s !important; } .typed{width:9ch} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo" aria-label="Metis">
+    <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path d="M2 3l8 8-8 8" fill="none" stroke="#00ADD8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3l8 8-8 8" fill="none" stroke="#FFD43B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 19h4" stroke="#E6E8F4" stroke-width="3" stroke-linecap="round"/></svg>
+    Metis Studio
+  </div>
+  <span class="chip">preview · sample progress</span>
+  <div class="palette"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2"/></svg>Go to lesson, exercise or command<kbd>Ctrl K</kbd></div>
+</header>
+<div class="main">
+  <nav class="tree" aria-label="Curriculum">
+    <h2>Explorer</h2>
+    <ul>
+      <li>▾ PY · Python for Go developers</li>
+      <li><ul>
+        <li>▾ M01 Setup and the feedback loop</li>
+        <li><ul>
+          <li><span class="dot done"></span>L01 Running Python</li>
+          <li><span class="dot done"></span>L02 venv and pip</li>
+          <li class="cur"><span class="dot half"></span>L03 pytest</li>
+          <li><span class="dot"></span>L04 Workspace and Git</li>
+        </ul></li>
+        <li>▸ M02 Names, objects, mutability</li>
+        <li>▸ M03 Data structures and strings</li>
+      </ul></li>
+      <li>▸ DB · Databases and SQL</li>
+      <li>▸ WEB · HTTP and FastAPI</li>
+      <li>▸ AS · Async Python</li>
+    </ul>
+  </nav>
+  <main class="editor">
+    <div class="tabs"><div class="tab">L02 venv.md</div><div class="tab on">L03 pytest.md</div><div class="tab">E1 initials.py</div></div>
+    <article class="doc">
+      <h1>pytest: reading a test, running it, reading a failure</h1>
+      <div class="crumb mono">PY › M01 › L03 · 35 min · beginner</div>
+      <p>Go tests call <code>t.Errorf</code> with a message you write. pytest uses plain <code>assert</code> and shows you the values itself.</p>
+      <div class="term" aria-label="Terminal">
+        <div><span class="prompt">~/workspace $</span> <span class="typed">pytest -q</span></div>
+        <div class="dots"><span class="pass">.</span><span class="pass">.</span><span class="pass">.</span><span style="color:var(--muted)">  [100%]</span></div>
+        <div class="sum pass">3 passed in 0.01s</div>
+      </div>
+      <section class="quiz" aria-label="Quiz">
+        <header><span>quiz q1 · choice</span><span>first try counts</span></header>
+        <div class="body">
+          <p style="margin:0 0 8px">Which file does pytest <em>not</em> collect by default?</p>
+          <div class="opt">○ test_words.py</div><div class="opt">○ words_test.py</div>
+          <div class="opt sel">● check_words.py</div>
+          <p class="result">PASS · check_words.py isn't collected (exit code 5)</p>
+        </div>
+      </section>
+    </article>
+  </main>
+  <aside class="side" aria-label="Progress">
+    <h3>This module</h3>
+    <div>2 of 4 lessons completed</div><div class="bar"><i style="--w:50%"></i></div>
+    <div>Whole path · 2 of 109</div><div class="bar"><i style="--w:2%"></i></div>
+    <h3 style="margin-top:20px">Reviews</h3>
+    <p style="margin:0 0 16px">L01 due tomorrow</p>
+    <h3>Weak spots</h3>
+    <p style="margin:0">Transactions · slicing · await</p>
+  </aside>
+</div>
+<footer class="status"><b>● PY.M01.L03</b><span>2/109 lessons</span><span>1 review due</span><span class="r">Python 3.12 · pytest 9.2</span></footer>
+</body>
+</html>

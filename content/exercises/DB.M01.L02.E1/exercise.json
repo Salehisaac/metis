@@ -1,0 +1,40 @@
+{
+  "id": "DB.M01.L02.E1",
+  "lesson": "DB.M01.L02",
+  "title": "Fix three write statements",
+  "problem": "writes.py holds three INSERT/UPDATE/DELETE statements from a chat backend. Each has one bug: one crashes, one would rewrite every message, one removes far more memberships than it should. Fix the SQL so each statement changes exactly the rows it's meant to.",
+  "requirements": [
+    "Edit only writes.py",
+    "Keep each statement's parameters in the order given in its comment",
+    "ADD_USER inserts username and created_at and lets the database assign the id",
+    "EDIT_MESSAGE changes body and edited_at of exactly one message, chosen by id",
+    "LEAVE_CHAT removes exactly one (chat, user) membership",
+    "A statement that matches no row is not an error: rowcount is 0 and nothing changes"
+  ],
+  "contract": "ADD_USER params (username, created_at); EDIT_MESSAGE params (new_body, edited_at, message_id); LEAVE_CHAT params (chat_id, user_id)",
+  "expectedBehavior": "ADD_USER with ('fay', ...) creates user id 6 (cursor.lastrowid == 6); EDIT_MESSAGE on id 6 has rowcount 1 and leaves the other 15 messages identical; LEAVE_CHAT (1, 2) has rowcount 1",
+  "edgeCases": [
+    "Duplicate username: sqlite3.IntegrityError and no new row",
+    "Editing a message id that doesn't exist: rowcount 0, nothing changed",
+    "Leaving a chat you're not in: rowcount 0, nothing changed",
+    "The user stays in their other chats; the other members stay in this chat"
+  ],
+  "tests": [
+    "test_add_user_gets_a_new_id",
+    "test_add_user_duplicate_username_is_rejected",
+    "test_edit_message_changes_exactly_one_row",
+    "test_edit_missing_message_changes_nothing",
+    "test_leave_chat_removes_one_membership",
+    "test_leave_chat_when_not_a_member"
+  ],
+  "hints": [
+    "Conceptual: run pytest first and read each failure. Some statements fail with a database error that names the problem; the others run fine but touch the wrong rows. An UPDATE or DELETE touches every row its WHERE allows.",
+    "Specific: ADD_USER's VALUES has fewer values than the table has columns. EDIT_MESSAGE has three parameters but only two placeholders. LEAVE_CHAT's condition is true for every row of the chat and every chat of the user.",
+    "Implementation: name the columns you insert (INSERT INTO t (col_a, col_b) VALUES (?, ?)); add WHERE id = ? as the last placeholder of the UPDATE; the DELETE needs both conditions to hold at once."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "The INSERT names its columns instead of relying on the table's column order",
+    "Every UPDATE and DELETE has a WHERE that pins down exactly the intended rows"
+  ]
+}

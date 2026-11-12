@@ -1,0 +1,44 @@
+{
+  "id": "ARCH.M02.L03.E1",
+  "lesson": "ARCH.M02.L03",
+  "title": "Negative caching and TTL jitter for city pages",
+  "problem": "Bots probe /cities/<id> with random ids, and every miss for a missing city goes to the database. And after a deploy, thousands of city keys are cached in the same second, so they all expire in the same second. Write get_city with negative caching and jittered TTLs, plus the hook that makes newly created cities visible at once.",
+  "requirements": [
+    "A city that exists is cached as JSON with ex = POSITIVE_TTL + rng.randrange(JITTER)",
+    "A city that doesn't exist is cached as a 'not found' marker with ex = NEGATIVE_TTL (no jitter)",
+    "A cached 'not found' returns None without calling load_city",
+    "on_city_created(r, city_id) removes any cached entry for that id",
+    "If load_city raises, nothing is cached and the exception propagates",
+    "Call rng.randrange exactly once per positive cache fill (use the rng argument, not random directly)"
+  ],
+  "contract": "get_city(r, load_city, city_id: int, rng=random) -> dict | None\non_city_created(r, city_id: int) -> None",
+  "expectedBehavior": "get_city(r, load, 404) returns None and caches the marker for 30 s; a second call returns None without calling load. get_city(r, load, 1, rng=random.Random(1)) caches Paris with TTL 600 + random.Random(1).randrange(60).",
+  "edgeCases": [
+    "Second lookup of a missing id within NEGATIVE_TTL: no database call",
+    "A city created after its id was cached as missing",
+    "City dicts with falsy fields ('' name, 0 population) are hits, not misses",
+    "Database error: no marker cached (an outage is not 'not found')",
+    "Many keys filled at once: TTLs differ"
+  ],
+  "tests": [
+    "test_found_city_uses_jittered_ttl",
+    "test_jitter_spreads_expiry",
+    "test_hit_skips_loader",
+    "test_missing_city_hits_database_once",
+    "test_negative_entry_has_short_exact_ttl",
+    "test_created_city_becomes_visible",
+    "test_loader_error_is_not_cached",
+    "test_falsy_city_fields_are_a_hit"
+  ],
+  "hints": [
+    "Conceptual: a cache entry can mean two things now, 'here is the city' and 'there is no such city'. You need a stored value that means 'not found' and can't be confused with a real city or with a miss (the key not existing at all).",
+    "Specific: json.dumps(None) is the string 'null', and json.loads('null') is None. So if r.get returns anything that isn't None, you can return json.loads of it directly: a city dict or None.",
+    "Implementation: raw = r.get(key); if raw is not None: return json.loads(raw). Otherwise city = load_city(city_id); if city is None, set json.dumps(None) with ex=NEGATIVE_TTL; else set json.dumps(city) with ex=POSITIVE_TTL + rng.randrange(JITTER). on_city_created just deletes the key."
+  ],
+  "evaluation": [
+    "All 8 tests pass",
+    "The 'not found' marker can't collide with a real city",
+    "The negative TTL is shorter than the positive one, so new cities show up quickly even without the hook",
+    "An exception from load_city is never cached as 'not found'"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "DB.M04.L03.E1",
+  "lesson": "DB.M04.L03",
+  "title": "A UserRepository with domain errors, transactions and keyset paging",
+  "problem": "Implement UserRepository in user_repo.py: the one place that writes SQL for the users table. Its methods return User dataclass objects (or None), turn database errors into UsernameTaken and UserNotFound, commit each write as one transaction, and page through users with keyset pagination.",
+  "requirements": [
+    "Edit only user_repo.py; keep the class, method signatures, User, UsernameTaken and UserNotFound",
+    "Every value goes through a placeholder",
+    "get and by_username return a User or None",
+    "add strips the username, rejects a blank one with ValueError, raises UsernameTaken (chained with `from` to the IntegrityError) for a duplicate, commits, and returns the new User",
+    "rename strips, rejects blank with ValueError, raises UserNotFound for an unknown id and UsernameTaken for a name in use, commits on success, changes nothing on failure, and returns the updated User",
+    "page(after, limit) returns up to limit users ordered by username with username > after (all from the start when after is None); limit outside 1..100 raises ValueError",
+    "No write leaves a transaction open, whether it succeeds or fails"
+  ],
+  "contract": "UserRepository(conn); add(username: str, now: str) -> User; get(user_id: int) -> User | None; by_username(username: str) -> User | None; rename(user_id: int, new_username: str) -> User; page(after: str | None = None, limit: int = 20) -> list[User]",
+  "expectedBehavior": "repo.add('  fay ', NOW) returns User(6, 'fay', NOW) and another connection sees it; repo.add('ana', NOW) raises UsernameTaken; repo.page(limit=2) then repo.page(after='ben', limit=2) returns ana, ben, then chen, dara",
+  "edgeCases": [
+    "Unknown id or username: None from the getters",
+    "A username with surrounding spaces is stored stripped; a blank one is rejected before any SQL",
+    "Duplicate username on add and on rename",
+    "Renaming a user id that doesn't exist",
+    "Paging past the last user returns []",
+    "limit 0, negative, or over 100"
+  ],
+  "tests": [
+    "test_get_and_by_username_return_users",
+    "test_get_and_by_username_missing",
+    "test_add_returns_the_new_user_and_commits",
+    "test_add_duplicate_raises_username_taken",
+    "test_add_blank_raises_value_error",
+    "test_rename",
+    "test_rename_errors",
+    "test_page_walks_all_users_with_keyset",
+    "test_page_limit_is_validated"
+  ],
+  "hints": [
+    "Conceptual: each public method is a small contract: validate what needs no database, run the SQL in one transaction, translate the few database errors callers care about, and return domain objects. Write one method at a time and run its tests.",
+    "Specific: wrap each write in `with self._conn:` and catch sqlite3.IntegrityError outside that block; err.sqlite_errorname == 'SQLITE_CONSTRAINT_UNIQUE' tells a duplicate from other constraint failures; re-raise as UsernameTaken(...) from err. rename knows the id was unknown when the UPDATE's rowcount is 0; raising inside the with block rolls back. Keyset paging is WHERE username > ? ORDER BY username LIMIT ?.",
+    "Implementation: add: name = username.strip(); if not name: raise ValueError; try: with self._conn: cur = self._conn.execute(INSERT ..., (name, now)) except sqlite3.IntegrityError as err: raise UsernameTaken(name) from err; return User(cur.lastrowid, name, now). page with after=None can use WHERE ? IS NULL OR username > ? and pass after twice, or build two fixed SQL strings."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "No sqlite3 exception or tuple escapes the repository for the cases in the contract",
+    "Exactly one transaction per write method; validation happens before it",
+    "Errors are chained (raise ... from err) so the original cause stays visible in tracebacks"
+  ]
+}

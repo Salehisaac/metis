@@ -1,0 +1,43 @@
+{
+  "id": "DB.M08.L01.E1",
+  "lesson": "DB.M08.L01",
+  "title": "Let the database enforce the rules: NOT NULL, UNIQUE, CHECK, FOREIGN KEY",
+  "problem": "schema.py creates the users, chats and chat_members tables with the right columns but no rules. Add the constraints described in the comments so that invalid data is rejected by the database itself, and make connect() turn on foreign-key enforcement.",
+  "requirements": [
+    "users.username is required and unique",
+    "chats.kind is required and is 'direct' or 'group'; a group chat must have a title",
+    "chat_members.chat_id and user_id are required and reference chats and users",
+    "Deleting a chat deletes its memberships; deleting a user who is still a member is refused",
+    "chat_members.role is required, defaults to 'member', and is one of 'owner', 'admin', 'member'",
+    "connect() enables foreign keys on the connection"
+  ],
+  "contract": "schema.SCHEMA: str (SQLite DDL); schema.connect(path=':memory:') -> sqlite3.Connection",
+  "expectedBehavior": "Every invalid INSERT or DELETE in the tests raises sqlite3.IntegrityError; DELETE FROM chats WHERE id = 1 also removes that chat's memberships",
+  "edgeCases": [
+    "NULL passes a CHECK unless the column is NOT NULL",
+    "A direct chat without a title is valid",
+    "Foreign keys are off in SQLite until enabled per connection",
+    "Deleting a parent row that is still referenced"
+  ],
+  "tests": [
+    "test_connect_enables_foreign_keys",
+    "test_valid_data_is_accepted",
+    "test_username_is_required_and_unique",
+    "test_kind_is_required_and_limited",
+    "test_group_needs_a_title_direct_does_not",
+    "test_role_defaults_to_member_and_is_limited",
+    "test_membership_must_reference_existing_rows",
+    "test_deleting_a_chat_deletes_its_memberships",
+    "test_a_member_cannot_be_deleted"
+  ],
+  "hints": [
+    "Conceptual: each rule maps to one constraint: required -> NOT NULL, unique -> UNIQUE, allowed values or a rule across columns -> CHECK, references -> REFERENCES with an ON DELETE action. SQLite also needs one PRAGMA per connection.",
+    "Specific: a CHECK passes when its expression is NULL, so pair it with NOT NULL. 'A group must have a title' compares two columns, so write it as a table-level CHECK after the columns.",
+    "Implementation: kind TEXT NOT NULL CHECK (kind IN ('direct', 'group')); CHECK (kind = 'direct' OR title IS NOT NULL); chat_id INTEGER NOT NULL REFERENCES chats(id) ON DELETE CASCADE; role TEXT NOT NULL DEFAULT 'member' CHECK (role IN (...)); conn.execute('PRAGMA foreign_keys = ON') in connect()."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "Constraints have names where they're CHECKs",
+    "No validation code in Python: the schema does the work"
+  ]
+}

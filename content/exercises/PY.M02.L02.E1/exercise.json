@@ -1,0 +1,34 @@
+{
+  "id": "PY.M02.L02.E1",
+  "lesson": "PY.M02.L02",
+  "title": "Build a hashable cache key from query parameters",
+  "problem": "A small HTTP cache stores responses in a dict, keyed by the request's query parameters. A dict can't be a dict key, so write cache_key(params) that turns the parameters into a hashable tuple. The same parameters in a different order must give an equal key.",
+  "requirements": [
+    "Return a tuple of (name, value) pairs, sorted by name",
+    "List values become tuples with the same items, in the same order",
+    "Other values (str, int) are kept as they are",
+    "Don't change the params dict or the lists inside it"
+  ],
+  "contract": "cache_key(params: dict) -> tuple",
+  "expectedBehavior": "cache_key({'q': 'go', 'page': 2}) == (('page', 2), ('q', 'go')); cache_key({'tags': ['go', 'py']}) == (('tags', ('go', 'py')),); cache_key({}) == ()",
+  "edgeCases": ["Empty dict", "Same parameters inserted in a different order", "List values", "The caller's dict must stay unchanged"],
+  "tests": [
+    "test_single_param",
+    "test_pairs_are_sorted_by_name",
+    "test_insertion_order_does_not_matter",
+    "test_list_values_become_tuples",
+    "test_empty_params",
+    "test_key_works_in_a_dict",
+    "test_params_are_not_changed"
+  ],
+  "hints": [
+    "Conceptual: dict keys must be hashable. A tuple of strings and ints is hashable; a tuple that contains a list is not (section 6). Order matters for tuple equality, so pick a fixed order.",
+    "Specific: loop over the names in sorted order with `for name in sorted(params):`, and check each value with isinstance(value, list).",
+    "Implementation: collect (name, value) pairs in a list, converting a list value with tuple(value) and storing it in a local variable (not back into params), then return tuple(pairs)."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "The result is hashable and order-independent",
+    "params is not mutated (no params[name] = ... assignments)"
+  ]
+}

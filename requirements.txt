@@ -1,0 +1,17 @@
+# Learner environment for exercises (install into .venv: .venv/bin/python -m pip install -r requirements.txt).
+# Direct dependencies pinned to releases at least 14 days old when chosen (2026-11-12).
+pytest==9.2.0
+fastapi==0.162.0
+pydantic==2.14.2
+httpx==0.28.1          # required by fastapi.testclient.TestClient
+uvicorn==0.54.0
+sqlalchemy==2.1.6
+alembic==1.20.1
+aiosqlite==0.22.1      # async SQLite driver for async SQLAlchemy (AS.M03)
+greenlet==3.5.6        # required by sqlalchemy.ext.asyncio (SQLAlchemy 2.1 no longer installs it by default)
+pyjwt==2.15.1          # token auth (WEB.M06)
+redis==8.1.0           # client API taught in ARCH.M02
+fakeredis==2.40.0      # in-memory Redis for tests (no Redis server on this machine)
+pyyaml==6.0.3          # reading CI/compose YAML in OPS exercises
+ruff==0.17.3           # lint/format (PY.M06, OPS.M03)
+python-multipart==0.0.32  # form parsing for OAuth2PasswordRequestForm (WEB.M06)

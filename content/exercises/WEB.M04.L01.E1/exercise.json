@@ -1,0 +1,46 @@
+{
+  "id": "WEB.M04.L01.E1",
+  "lesson": "WEB.M04.L01",
+  "title": "Write Arrange/Act/Assert tests that kill six mutants",
+  "problem": "app.py is a working messages API (send, list, delete messages in chats 1 and 2). This time you write the tests. Fill in the five test functions in test_messages.py using the client fixture. test_meta.py runs your tests against six copies of app.py, each with one realistic bug, and every bug must make at least one of your tests fail.",
+  "requirements": [
+    "Edit only test_messages.py. Don't change app.py, conftest.py or test_meta.py",
+    "Keep the five test names; each test takes only the client fixture",
+    "Structure each test as Arrange / Act / Assert (blank lines or comments between the parts)",
+    "Every test asserts the status code, and asserts on the body where the spec fixes it",
+    "All your tests pass on the real app.py",
+    "Write your tests from the docstrings and app.py first. Read the mutants in test_meta.py only after your first run"
+  ],
+  "contract": "test_messages.py defines test_send_message_returns_201_and_the_message, test_send_to_unknown_chat_is_404, test_blank_text_is_422, test_list_shows_only_this_chat and test_list_keeps_sending_order, each taking (client)",
+  "expectedBehavior": "pytest -q shows your five tests and all six test_tests_kill[...] cases passing",
+  "edgeCases": [
+    "A field in the response that your test never checks lets a bug in that field through",
+    "A chat that has no messages while another chat has some",
+    "Text made only of spaces",
+    "Order of a list with two or more items"
+  ],
+  "tests": [
+    "test_send_message_returns_201_and_the_message",
+    "test_send_to_unknown_chat_is_404",
+    "test_blank_text_is_422",
+    "test_list_shows_only_this_chat",
+    "test_list_keeps_sending_order",
+    "test_tests_kill[created_is_200]",
+    "test_tests_kill[unknown_chat_accepted]",
+    "test_tests_kill[blank_accepted]",
+    "test_tests_kill[wrong_chat_id]",
+    "test_tests_kill[other_chats_listed]",
+    "test_tests_kill[newest_first]"
+  ],
+  "hints": [
+    "Conceptual: a test only protects what it asserts. For each test, ask: which wrong response would still pass my asserts? If 200 instead of 201 would pass, or chat_id 1 instead of 2, add the assert that rules it out.",
+    "Specific: the docstrings pick the chat for a reason. Posting to chat 2 and asserting chat_id == 2 catches a handler that hard-codes chat 1. For the 'only this chat' test, the Arrange step must put a message in the OTHER chat first.",
+    "Implementation: Arrange builds the input (and sends setup requests); Act is one client.post/get call stored in response; Assert checks response.status_code first, then response.json(). For 422 tests, assert on response.json()[\"detail\"][0][\"loc\"], not on the message text."
+  ],
+  "evaluation": [
+    "All 11 tests pass, including all six test_tests_kill cases",
+    "Each test has one Act step and visible Arrange/Act/Assert parts",
+    "Status code asserted in every test; body asserted where the spec fixes it",
+    "You can say which of your tests kills each mutant"
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "id": "PY.M06.L01.E1",
+  "lesson": "PY.M06.L01",
+  "title": "Make the spend scripts a package you can run with python -m",
+  "problem": "ledger.py, report.py and cli.py were written as loose scripts, and they don't work as a package called spend. Make them a working package: `python -m spend expenses.csv` must print the per-category report. This folder plays the role of the package folder: each test copies every .py file here (except the tests) into <tmp>/spend/, adds an empty __init__.py, and runs Python from <tmp>. So don't create __init__.py yourself. Read the tracebacks the tests show you: you'll meet more than one kind of import error. Don't change the tests or what the functions compute.",
+  "requirements": [
+    "Imports between the package's own modules are relative (`from .x import y`), so the package works under any name",
+    "Importing spend.report first, or spend.ledger first, both work (no circular import)",
+    "Add __main__.py so that `python -m spend FILE` runs cli.main with the command-line arguments",
+    "The process exit status is main()'s return value: 0 on success, 2 with a usage message on stderr when FILE is missing",
+    "Keep __main__.py short; the logic stays in cli.py",
+    "Don't create __init__.py and don't modify test_spend.py"
+  ],
+  "contract": "Package spend: ledger.py, report.py, cli.py (main(argv: list[str]) -> int), __main__.py, plus any new module you need. Run as `python -m spend FILE`.",
+  "expectedBehavior": "`python -m spend expenses.csv` prints 'food: 19.75 EUR' and 'rent: 700.00 EUR' and exits 0; `python -m spend` prints 'usage: python -m spend FILE' to stderr and exits 2",
+  "edgeCases": [
+    "Either module can be the first one imported",
+    "Missing command-line argument: exit status 2, not 0 or 1",
+    "Empty input file prints 'no expenses'",
+    "The package folder renamed to budget/ must still work"
+  ],
+  "tests": [
+    "test_report_imports_first",
+    "test_ledger_imports_first",
+    "test_runs_with_python_m",
+    "test_empty_file",
+    "test_missing_argument_exits_2",
+    "test_works_under_another_package_name"
+  ],
+  "hints": [
+    "Conceptual: there are three separate problems, in this order. Absolute imports like `from report import ...` only work when this folder itself is on sys.path. ledger and report import each other. And a package needs a __main__.py to be run with -m.",
+    "Specific: after switching to relative imports you'll see 'cannot import name ... from partially initialized module'. The thing both modules need is one constant. If neither module owns it, neither has to import the other for it.",
+    "Implementation: move CURRENCY into a new module (e.g. settings.py) and import it from there with `from .settings import CURRENCY`. __main__.py needs three lines of real code: import sys, import main from .cli, and pass main's return value for sys.argv[1:] to sys.exit."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "Only relative imports between the package's modules; no sys.path manipulation",
+    "The cycle is removed by restructuring, not hidden with an import inside a function",
+    "__main__.py contains no business logic"
+  ]
+}

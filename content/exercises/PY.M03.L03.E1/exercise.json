@@ -1,0 +1,47 @@
+{
+  "id": "PY.M03.L03.E1",
+  "lesson": "PY.M03.L03",
+  "title": "Top N senders with alphabetical tie-break",
+  "problem": "A chat service wants a 'most active senders' list. Implement top_senders(messages, n) in ranking.py: count each sender's messages, ignoring messages with empty text, then return the names of the top n senders, most messages first, with ties broken alphabetically. n is how many names to return. It is not a message count.",
+  "requirements": [
+    "Count messages per sender; a message with text == \"\" doesn't count",
+    "Rank senders by message count, highest first",
+    "Break ties in count alphabetically by name (A to Z)",
+    "Return at most n names: the first n of that ranking, or all of them if there are fewer",
+    "n == 0 returns []; n < 0 raises ValueError",
+    "Don't modify the messages list"
+  ],
+  "contract": "top_senders(messages: list[tuple[str, str]], n: int) -> list[str]",
+  "expectedBehavior": "With ali 3 messages, bob 2, sara 1: n=1 -> ['ali'], n=2 -> ['ali', 'bob'], n=3 or more -> ['ali', 'bob', 'sara']. With kian 2, tara 1, dana 1 and n=2 -> ['kian', 'dana'].",
+  "edgeCases": [
+    "Ties whose input order is not alphabetical",
+    "A tie exactly at the cutoff (who gets the last place?)",
+    "n larger than the number of senders",
+    "n == 0, negative n, empty input",
+    "Senders whose only messages are empty strings don't appear at all",
+    "The caller's list must be unchanged afterwards"
+  ],
+  "tests": [
+    "test_top_two",
+    "test_top_one",
+    "test_n_is_a_ranking_size_not_a_count",
+    "test_ties_are_alphabetical_even_if_input_is_not",
+    "test_tie_at_the_cutoff",
+    "test_n_larger_than_number_of_senders",
+    "test_empty_text_does_not_count",
+    "test_n_zero_and_empty_input",
+    "test_negative_n_raises",
+    "test_input_is_not_modified"
+  ],
+  "hints": [
+    "Conceptual: this is three steps, in order: count (a dict of name -> count), rank (one sorted call whose key encodes both rules), cut (take the first n). Counter.most_common alone is not enough, because it breaks ties by first appearance, not alphabetically.",
+    "Specific: the sort key for a sender must make higher counts sort first and, among equal counts, names sort A to Z. A tuple key does both; reverse=True does not (it would flip the names too). Taking the first n with a slice is safe even when n is larger than the number of senders.",
+    "Implementation: validate n first. Loop over the (sender, text) pairs and count only when text is non-empty. Then sort the senders with key=lambda s: (-count_of_s, s) and return the slice up to n."
+  ],
+  "evaluation": [
+    "All tests pass",
+    "One sorted() call with a tuple key; no hand-written sorting loop",
+    "Uses sorted() (new list), not .sort() on the caller's data",
+    "Tested mentally against a tie at the cutoff before running pytest"
+  ]
+}

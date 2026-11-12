@@ -1,0 +1,42 @@
+{
+  "id": "DB.M02.L04.E1",
+  "lesson": "DB.M02.L04",
+  "title": "The chat list: per-chat counts without fan-out, and the latest message per chat",
+  "problem": "A messenger's home screen needs two queries. CHAT_LIST shows one user's chats with each chat's member count, message count and last activity. LATEST_PER_CHAT shows the newest message of each chat with its sender's name. Both combine three tables, and both have a classic trap: counts multiplied by fan-out, and a 'latest row' taken from an arbitrary row.",
+  "requirements": [
+    "Edit only chatlist.py",
+    "CHAT_LIST: (chat_id, title, members, messages, last_message_at) for every chat the given user belongs to",
+    "members counts all members of the chat; messages counts all its messages (0 if none); last_message_at is the newest sent_at or None",
+    "CHAT_LIST order: newest last_message_at first, chats without messages last, ties by chat_id",
+    "LATEST_PER_CHAT: (chat_id, message_id, username, body) of each chat's newest message (latest sent_at, ties by highest id); chats without messages don't appear; ordered by chat_id",
+    "No bare columns, and no count inflated by joining two one-to-many tables at once"
+  ],
+  "contract": "Each constant is one SELECT as a str. Parameters: CHAT_LIST (user_id,); LATEST_PER_CHAT none",
+  "expectedBehavior": "CHAT_LIST with (1,) returns [(1, 'team', 3, 10, '2026-11-09 08:00:00'), (3, 'book club', 4, 3, '2026-11-09 08:00:00'), (2, None, 2, 3, '2026-11-08 18:00:00')]; LATEST_PER_CHAT returns chat 1's message 16 (not 15, which has the same sent_at)",
+  "edgeCases": [
+    "A chat with members but no messages: messages 0, last_message_at None, sorted last",
+    "Two chats with the same last_message_at: ordered by chat_id",
+    "Two messages in one chat with the same newest sent_at: the higher id wins",
+    "A user who is in no chat: empty list",
+    "A direct chat has title None"
+  ],
+  "tests": [
+    "test_chat_list_counts_without_fan_out",
+    "test_chat_list_of_another_user",
+    "test_chat_list_with_a_chat_without_messages",
+    "test_chat_list_puts_empty_chats_last",
+    "test_chat_list_of_unknown_user",
+    "test_latest_per_chat_breaks_ties_by_id",
+    "test_latest_per_chat_after_a_new_message"
+  ],
+  "hints": [
+    "Conceptual: joining a chat to its members and to its messages in one FROM produces members x messages rows per chat, so every count is multiplied. Compute each per-chat number separately. For 'the newest row per group', max() gives you the newest value, not the newest row.",
+    "Specific: a scalar subquery in the SELECT list, (SELECT count(*) FROM messages AS m WHERE m.chat_id = c.id), computes one number per chat with no fan-out. For the latest message, keep a message only if its id equals the id of the first message of its chat ordered newest first.",
+    "Implementation: CHAT_LIST is FROM chat_members AS me JOIN chats AS c ON c.id = me.chat_id WHERE me.user_id = ?, with three correlated subqueries for members, messages and max(sent_at), then ORDER BY last_message_at DESC NULLS LAST, c.id. LATEST_PER_CHAT: WHERE m.id = (SELECT x.id FROM messages AS x WHERE x.chat_id = m.chat_id ORDER BY x.sent_at DESC, x.id DESC LIMIT 1)."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "Counts are right because each is computed without multiplying rows, not because of a lucky DISTINCT",
+    "The latest message is chosen with a fully defined order, not from a bare column"
+  ]
+}

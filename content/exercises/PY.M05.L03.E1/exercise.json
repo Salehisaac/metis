@@ -1,0 +1,43 @@
+{
+  "id": "PY.M05.L03.E1",
+  "lesson": "PY.M05.L03",
+  "title": "Inject a clock into a rate limiter",
+  "problem": "SlidingWindowLimiter reads time.monotonic() directly, so testing 'blocked until the window passes' would mean really waiting. limiter.py already defines a Clock protocol and a SystemClock. Write FakeClock (a clock that only moves when told to) and refactor the limiter to take any Clock, defaulting to the real one. The limiting rule itself must not change.",
+  "requirements": [
+    "FakeClock(start=0.0): now() returns the current fake time, which only changes through advance(seconds)",
+    "advance with a negative number raises ValueError and leaves the time unchanged; advance(0) is allowed",
+    "FakeClock satisfies the Clock protocol structurally: it must NOT inherit from Clock",
+    "SlidingWindowLimiter(limit, window, clock=None) stores the clock it uses as self.clock; with no clock it uses a new SystemClock()",
+    "allow() gets the time only from self.clock.now()",
+    "Keep the rule: a call allowed at time t counts against the limit until t + window (exclusive)"
+  ],
+  "contract": "FakeClock(start: float = 0.0); now(self) -> float; advance(self, seconds: float) -> None.  SlidingWindowLimiter(limit: int, window: float, clock: Clock | None = None); attribute clock; allow(self) -> bool",
+  "expectedBehavior": "clock = FakeClock(); lim = SlidingWindowLimiter(1, 10.0, clock=clock); lim.allow() is True; lim.allow() is False; clock.advance(10); lim.allow() is True",
+  "edgeCases": [
+    "A call exactly window seconds after an allowed call is allowed again (the old one has expired)",
+    "advance(0) is fine; advance(-1) raises and doesn't move the clock",
+    "Two limiters sharing one clock still count separately",
+    "No clock passed: the limiter works with the real clock"
+  ],
+  "tests": [
+    "test_fake_clock_starts_at_given_time",
+    "test_fake_clock_advance",
+    "test_fake_clock_rejects_going_backwards",
+    "test_fake_clock_satisfies_protocol_without_inheriting",
+    "test_limiter_blocks_after_limit",
+    "test_limiter_frees_slot_exactly_at_window",
+    "test_limiters_are_independent",
+    "test_limiter_uses_real_clock_by_default"
+  ],
+  "hints": [
+    "Conceptual: this is the Go pattern 'depend on an interface, pass the real implementation in production and a fake in tests'. FakeClock just needs a now method; it never mentions Clock. The limiter should ask its clock for the time instead of the time module.",
+    "Specific: FakeClock keeps the current time in an attribute set in __init__. The limiter's __init__ gets a clock parameter with default None, and picks SystemClock() when it's None. Why not write clock: Clock = SystemClock() as the default? (PY.M02.L04.)",
+    "Implementation: in FakeClock, now returns self._now; advance checks seconds < 0 first (raise ValueError), then does self._now += seconds. In the limiter: self.clock = clock if clock is not None else SystemClock(), and in allow replace time.monotonic() with self.clock.now()."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "FakeClock doesn't inherit from Clock",
+    "allow() no longer calls the time module",
+    "The default clock is created per limiter (no object built once in the signature)"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "ARCH.M01.L02.E1",
+  "lesson": "ARCH.M01.L02",
+  "title": "Wallet transfer in one unit of work",
+  "problem": "wallet.py moves money between accounts. Finish it so a transfer is all or nothing: a UnitOfWork context manager owns the transaction, the repository never commits, and withdrawing can't overdraw even under concurrency. One repository method already has a bug that breaks the all-or-nothing rule: find it.",
+  "requirements": [
+    "No AccountRepo method commits; the UnitOfWork decides",
+    "AccountRepo.withdraw uses one conditional UPDATE and returns whether a row changed",
+    "UnitOfWork: __enter__ returns the unit of work; __exit__ commits on success, rolls back on an exception and lets the exception propagate",
+    "transfer validates input (ValueError), then runs all reads and writes inside one UnitOfWork",
+    "transfer raises AccountNotFound or InsufficientFunds, and no balance changes on any error"
+  ],
+  "contract": "AccountRepo(conn).withdraw(account_id: int, amount: int) -> bool\nwith UnitOfWork(conn) as uow: uow.accounts.deposit(...)\ntransfer(conn, from_id: int, to_id: int, amount: int) -> None",
+  "expectedBehavior": "With balances {1: 100, 2: 0}: transfer(conn, 1, 2, 30) gives {1: 70, 2: 30}. transfer(conn, 1, 99, 10) raises AccountNotFound and leaves {1: 100, 2: 0}, even if the withdraw already ran.",
+  "edgeCases": [
+    "Withdrawing exactly the whole balance succeeds; one more fails",
+    "Destination account missing after the source was already debited: everything rolls back",
+    "amount 0 or negative, and transferring to the same account: ValueError with no change",
+    "An exception inside the with block must reach the caller unchanged (not swallowed)"
+  ],
+  "tests": [
+    "test_repo_does_not_commit",
+    "test_withdraw_is_conditional",
+    "test_uow_commits_on_success",
+    "test_uow_rolls_back_and_reraises",
+    "test_transfer_moves_money",
+    "test_transfer_insufficient_funds_changes_nothing",
+    "test_transfer_to_missing_account_changes_nothing",
+    "test_transfer_from_missing_account",
+    "test_transfer_rejects_bad_input"
+  ],
+  "hints": [
+    "Conceptual: a transaction belongs to the use case (the transfer), not to each SQL statement. If any single method commits, a later failure can't undo it. Look for the line that does exactly that.",
+    "Specific: put the balance check into the UPDATE itself: change the row only WHERE the balance is high enough, then look at cursor.rowcount to see whether it happened. That closes the read-then-write gap.",
+    "Implementation: __exit__(self, exc_type, exc, tb) receives exc_type None on success. Call self.conn.commit() or self.conn.rollback() accordingly and return False so Python re-raises the exception. In transfer, validate first, then open `with UnitOfWork(conn) as uow:` and raise the domain errors inside it."
+  ],
+  "evaluation": [
+    "All 9 tests pass",
+    "Exactly one place commits: UnitOfWork.__exit__",
+    "withdraw is a single conditional UPDATE, not a SELECT followed by an UPDATE",
+    "Domain errors are raised inside the with block so the rollback happens"
+  ]
+}

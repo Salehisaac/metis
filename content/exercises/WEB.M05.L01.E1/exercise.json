@@ -1,0 +1,38 @@
+{
+  "id": "WEB.M05.L01.E1",
+  "lesson": "WEB.M05.L01",
+  "title": "Replace a shared session with a session per request",
+  "problem": "create_app opens one SQLAlchemy Session and every request uses it. After one duplicate username, every later request fails with PendingRollbackError, and a GET leaves its connection checked out. Refactor app.py so each request gets its own session from a yield dependency and the session is always closed.",
+  "requirements": [
+    "Edit only app.py. Don't change conftest.py or test_users.py",
+    "create_app(engine) stores a sessionmaker for the engine (not a Session) on app.state",
+    "get_session(request) is a generator: it opens a session from that factory, yields it, and closes it even when the endpoint raises",
+    "A duplicate username still answers 409, and the next request works normally",
+    "Keep the endpoints, models and response shapes unchanged"
+  ],
+  "contract": "create_app(engine: Engine) -> FastAPI; get_session(request: Request) yields a Session",
+  "expectedBehavior": "Two POSTs with the same username give 201 then 409; a third POST with a new name gives 201; after any request, no pool connection is still checked out",
+  "edgeCases": [
+    "A request that fails with IntegrityError, followed by a normal request",
+    "A read-only request (GET) that never commits",
+    "An endpoint that raises HTTPException while the session is open"
+  ],
+  "tests": [
+    "test_create_user",
+    "test_duplicate_username_is_409",
+    "test_app_still_works_after_a_duplicate",
+    "test_no_connection_held_after_requests",
+    "test_get_session_is_a_yield_dependency"
+  ],
+  "hints": [
+    "Conceptual: a Session is a unit of work with its own transaction state, not a connection pool. Sharing one across requests means one request's failed flush poisons everyone else, and a read opens a transaction that nobody ends. The engine is the long-lived, shared object; sessions should be short-lived.",
+    "Specific: create the sessionmaker once in create_app and store it on app.state. get_session then becomes a dependency with yield: the code before yield runs before the endpoint, the code after it runs when the request is done.",
+    "Implementation: in create_app use app.state.session_factory = sessionmaker(engine). In get_session(request) write `with request.app.state.session_factory() as session:` and yield session inside the with block. Closing (the end of the with) rolls back anything uncommitted and returns the connection to the pool."
+  ],
+  "evaluation": [
+    "All five tests pass",
+    "No Session object outlives a request",
+    "The session is closed by a with block (or try/finally), not by a call at the end of each endpoint",
+    "You can explain why the duplicate broke every later request in the starter"
+  ]
+}

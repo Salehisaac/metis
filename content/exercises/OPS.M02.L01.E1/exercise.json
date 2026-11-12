@@ -1,0 +1,46 @@
+{
+  "id": "OPS.M02.L01.E1",
+  "lesson": "OPS.M02.L01",
+  "title": "Typed settings from the environment",
+  "problem": "Write load_settings(env), which turns environment variables into a typed, frozen Settings object and fails fast with one clear ConfigError when the configuration is wrong. The OAuth client secret must never appear in a repr or an error message.",
+  "requirements": [
+    "DATABASE_URL and OAUTH_CLIENT_SECRET are required; a missing or blank (whitespace-only) value is missing",
+    "If any are missing, raise ConfigError naming every missing variable in one message",
+    "PORT: optional, default 8000; must be a whole number from 1 to 65535",
+    "DEBUG: optional, default False; accepts true/false/1/0/yes/no in any case; anything else (including an empty value) is an error",
+    "LOG_LEVEL: optional, default INFO; case-insensitive, stored uppercase; must be DEBUG, INFO, WARNING, ERROR or CRITICAL",
+    "Strip surrounding whitespace from every value; invalid optional values raise ConfigError naming the variable",
+    "repr(settings) and every error message must not contain the secret",
+    "Read only the mapping you're given, never os.environ directly"
+  ],
+  "contract": "load_settings(env: Mapping[str, str]) -> Settings   # raises ConfigError. Settings(database_url: str, oauth_client_secret: str, port: int = 8000, debug: bool = False, log_level: str = \"INFO\") is a frozen dataclass.",
+  "expectedBehavior": "load_settings({'DATABASE_URL': 'sqlite:///x.db', 'OAUTH_CLIENT_SECRET': 's', 'PORT': '8080'}) returns Settings with port 8080, debug False, log_level 'INFO'; load_settings({}) raises ConfigError mentioning both DATABASE_URL and OAUTH_CLIENT_SECRET.",
+  "edgeCases": [
+    "Empty mapping: both required names in one error",
+    "Whitespace-only secret counts as missing",
+    "PORT values '0', '65536', '-1', '8080.0', '80a' and ''",
+    "DEBUG 'on' or 'maybe' is rejected rather than guessed",
+    "Values with surrounding spaces or a trailing newline (common in .env files and CI variables)"
+  ],
+  "tests": [
+    "test_required_values_and_defaults",
+    "test_optional_values_are_converted_and_trimmed",
+    "test_missing_required_values_are_all_reported",
+    "test_blank_value_counts_as_missing",
+    "test_invalid_port_is_rejected",
+    "test_invalid_flag_or_level_is_rejected",
+    "test_secret_stays_out_of_repr_and_errors",
+    "test_only_the_given_mapping_is_read"
+  ],
+  "hints": [
+    "Conceptual: environment variables are always strings (or absent). Your job is the boundary: check presence first, collecting every problem with the required values, then convert and validate each optional value, and only then build the object.",
+    "Specific: collect the missing required names in a list and raise once if it's non-empty. For the secret, look at the dataclasses field() options: one of them controls whether a field appears in the generated __repr__.",
+    "Implementation: env.get(NAME, default).strip(); for PORT check .isdigit() and the range before int(); for DEBUG lower() and compare against two sets of words; field(repr=False) on oauth_client_secret; never put the secret's value into an f-string error."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "Each error message says which variable is wrong and what is allowed",
+    "No os.environ access inside load_settings",
+    "No silent fallback: an invalid value is an error, not the default"
+  ]
+}

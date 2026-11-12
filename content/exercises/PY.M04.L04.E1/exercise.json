@@ -1,0 +1,46 @@
+{
+  "id": "PY.M04.L04.E1",
+  "lesson": "PY.M04.L04",
+  "title": "Write a parametrized suite that catches six seeded bugs",
+  "problem": "duration.py has a correct parse_duration() ('1h30m' -> 5400). This time you write the tests. Grow the VALID and INVALID tables in test_duration.py from the spec in the docstring, and write test_invalid with pytest.raises(match=). test_meta.py runs your tables against six buggy versions of parse_duration: every bug must make at least one of your rows fail.",
+  "requirements": [
+    "Edit only test_duration.py. Don't change duration.py or test_meta.py",
+    "Keep the rows that are already in VALID and INVALID; add your own",
+    "VALID rows are (text, expected_seconds) and must agree with the spec",
+    "INVALID rows are strings that the spec rejects",
+    "Write test_invalid(text), parametrized over INVALID, using pytest.raises(ValueError, match=...) with a pattern that matches \"invalid duration\"",
+    "Derive rows from the spec first. Read the bug docstrings in test_meta.py only after your first run"
+  ],
+  "contract": "test_duration.py defines VALID: list[tuple[str, int]], INVALID: list[str], test_valid(text, expected) and test_invalid(text), both parametrized",
+  "expectedBehavior": "pytest -q shows every test_valid[...] and test_invalid[...] case passing, test_rows_are_correct and test_invalid_uses_raises_with_match passing, and all six test_tables_catch[bug_...] cases passing",
+  "edgeCases": [
+    "Each unit alone, and units combined",
+    "Zero",
+    "Surrounding whitespace (valid) vs inner whitespace (invalid)",
+    "The empty string and a whitespace-only string",
+    "Units out of order or repeated",
+    "Number without a unit, unit without a number, decimals, signs, uppercase units"
+  ],
+  "tests": [
+    "test_valid[90s-90]",
+    "test_valid[2m-120]",
+    "test_rows_are_correct",
+    "test_invalid_uses_raises_with_match",
+    "test_tables_catch[bug_no_strip]",
+    "test_tables_catch[bug_empty_accepted]",
+    "test_tables_catch[bug_blank_accepted]",
+    "test_tables_catch[bug_zero_rejected]",
+    "test_tables_catch[bug_hours_as_minutes]",
+    "test_tables_catch[bug_any_order]"
+  ],
+  "hints": [
+    "Conceptual: go through the spec one bullet at a time and turn each bullet into at least one row. Add a row on each side of the rule where you can: '1h30m' is valid, so try '30m1h'; ' 5m ' is valid, so try '1h 30m'. Boundaries and 'nothing' inputs ('', '   ', zero) are where bugs live.",
+    "Specific: the six bugs are about whitespace around the text, the empty string, a whitespace-only string, a total of zero, the size of an hour, and unit order/repetition. Each needs a row that only a correct implementation gets right.",
+    "Implementation: add VALID rows such as ('1h', 3600), ('0s', 0) and ('  5m ', 300), and INVALID rows such as '', '   ' and '30m1h'. Then write @pytest.mark.parametrize(\"text\", INVALID) over a test_invalid(text) whose body is a with pytest.raises(ValueError, match=\"invalid duration\"): block around the call. Run pytest -x -vv and read which bug survives."
+  ],
+  "evaluation": [
+    "All tests pass, including all six test_tables_catch cases",
+    "Rows are derived from the spec, and each has a comment saying what it protects (a plus)",
+    "No rows copied from the bug implementations without understanding: you can say which spec rule each bug breaks"
+  ]
+}

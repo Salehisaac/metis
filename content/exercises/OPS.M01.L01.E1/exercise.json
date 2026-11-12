@@ -1,0 +1,36 @@
+{
+  "id": "OPS.M01.L01.E1",
+  "lesson": "OPS.M01.L01",
+  "title": "Fix a FastAPI Dockerfile",
+  "problem": "A colleague's Dockerfile for a FastAPI app builds, but it uses a floating base image, bakes an OAuth secret into the image, runs as root and starts uvicorn in shell form. Fix it so it follows the four rules from the lesson.",
+  "requirements": [
+    "Base image: python with a pinned version tag that includes the Python version and the slim variant (not latest)",
+    "No ENV or ARG whose name looks like a secret (SECRET, PASSWORD, TOKEN, API_KEY, PRIVATE_KEY)",
+    "The container runs as a non-root user: create it with useradd in a RUN, then switch with USER (a numeric UID also works)",
+    "CMD in exec form (a JSON array) running uvicorn app.main:app on host 0.0.0.0 and port 8000"
+  ],
+  "contract": "A file named Dockerfile in this folder. The app lives in app/main.py as `app = FastAPI()`, and requirements.txt sits next to the Dockerfile.",
+  "expectedBehavior": "All four static checks in test_dockerfile.py pass. (With Docker, `docker build -t api .` then `docker run -p 8000:8000 -e OAUTH_CLIENT_SECRET=... api` would serve the app as a non-root user.)",
+  "edgeCases": [
+    "A tag like 3.12-slim pins the minor version; 3.12.16-slim pins the patch too. latest or no tag fails",
+    "CMD with single quotes is not valid JSON, so Docker treats it as shell form",
+    "USER root or USER 0 is still root",
+    "USER with a name that was never created"
+  ],
+  "tests": [
+    "test_base_image_is_a_pinned_python_slim",
+    "test_runs_as_a_non_root_user_that_exists",
+    "test_cmd_is_exec_form_uvicorn_on_all_interfaces",
+    "test_no_secrets_baked_into_the_image"
+  ],
+  "hints": [
+    "Conceptual: everything in a Dockerfile ends up in the image that anyone with pull access can inspect, and the final USER and CMD decide how the container's main process runs.",
+    "Specific: change four lines: the FROM tag, delete the ENV line, add a user and switch to it after pip install, and turn CMD into a JSON array of strings with double quotes.",
+    "Implementation: FROM python:<version>-slim with a version from Docker Hub; RUN groupadd -r NAME && useradd --no-log-init -r -g NAME NAME; USER NAME; CMD [\"uvicorn\", \"app.main:app\", \"--host\", ...] with each argument as its own string."
+  ],
+  "evaluation": [
+    "All four tests pass",
+    "pip install still runs before USER (it writes to system site-packages)",
+    "The secret is not moved somewhere else in the file (e.g. into a RUN export)"
+  ]
+}

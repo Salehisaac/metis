@@ -1,0 +1,40 @@
+{
+  "id": "OPS.M03.L02.E1",
+  "lesson": "OPS.M03.L02",
+  "title": "A GitHub Actions workflow for Ruff and pytest",
+  "problem": "ci.yml is supposed to check every push, but it only runs when started by hand, never checks out the code, asks for the wrong Python, installs nothing and runs neither Ruff check nor Ruff format. Rewrite it so every push runs ruff check, ruff format --check and pytest on Python 3.12 with cached pip downloads.",
+  "requirements": [
+    "Trigger on push (other triggers such as pull_request are fine too)",
+    "Every job starts with actions/checkout, pinned to a version (@vN)",
+    "actions/setup-python, pinned to a version, with python-version as the string \"3.12\" (or a 3.12.x patch) and cache: pip",
+    "Install dependencies with pip install -r requirements.txt after setting up Python",
+    "Steps that run ruff check, ruff format --check and pytest, each after the install step of its job, each in its own step",
+    "Splitting lint and tests into two jobs is allowed; each job then needs its own checkout, setup and install"
+  ],
+  "contract": "A file named ci.yml in this folder (in a repository: .github/workflows/ci.yml), parsed with yaml.safe_load.",
+  "expectedBehavior": "All six tests pass. On GitHub, every push would run one job (or two) that checks out the code, installs requirements.txt on Python 3.12 and fails if Ruff or pytest fails.",
+  "edgeCases": [
+    "PyYAML loads the bare key on as True (YAML 1.1); the tests handle that, GitHub reads it as on",
+    "python-version: 3.10 unquoted loads as the number 3.1",
+    "A job without actions/checkout runs in an empty workspace",
+    "ruff check and ruff format --check combined in one run step: the first failure hides whether the second would pass"
+  ],
+  "tests": [
+    "test_runs_on_every_push",
+    "test_checks_out_the_code_before_anything_else",
+    "test_python_version_is_pinned_as_a_string",
+    "test_installs_from_requirements_with_pip_cache",
+    "test_runs_ruff_lint_format_and_pytest_after_installing",
+    "test_each_check_is_its_own_step"
+  ],
+  "hints": [
+    "Conceptual: a runner starts as a fresh, empty machine. Each job has to fetch the code, install Python and dependencies, and only then run the checks; the workflow fails as soon as a step exits non-zero.",
+    "Specific: change on: to include push, add actions/checkout as the first step, quote the Python version and add cache: pip under with:, then add one run step for the install and one for each check.",
+    "Implementation: steps: - uses: actions/checkout@v7 / - uses: actions/setup-python@v7 with python-version: \"3.12\" and cache: pip / - run: python -m pip install -r requirements.txt / then three run steps: ruff check ., ruff format --check ., pytest."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "requirements.txt pins ruff and pytest, so CI and laptops run the same versions",
+    "Step names (optional name:) make the GitHub UI readable"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "ARCH.M03.L02.E1",
+  "lesson": "ARCH.M03.L02",
+  "title": "Orders with a transactional outbox and a relay",
+  "problem": "Placing an order must eventually produce an 'order.placed' event on the broker, exactly when the order was really saved. Write place_order, which saves the order and its outbox event in one transaction, and relay_once, the worker step that publishes pending events in order, retries failures and parks events that keep failing.",
+  "requirements": [
+    "place_order validates (blank customer or total_cents <= 0: ValueError, nothing written), then inserts the order and one outbox row (topic 'order.placed', JSON payload with order_id, customer, total_cents) in a single transaction, and returns the order id",
+    "Use conn.execute for the statements",
+    "relay_once reads up to batch_size events with status 'pending', ordered by id, and calls publish(topic, payload_dict) for each",
+    "After each successful publish, set status 'sent' and commit immediately",
+    "On a publish exception: attempts + 1, last_error = str(error), status 'dead' when attempts reaches max_attempts (else stays 'pending'), commit, and stop the batch",
+    "Return the number of events published in this call"
+  ],
+  "contract": "place_order(conn, customer: str, total_cents: int) -> int\nrelay_once(conn, publish, batch_size: int = 10, max_attempts: int = 5) -> int   # publish(topic: str, payload: dict) -> None, raises on failure",
+  "expectedBehavior": "Three orders, then relay_once with a broker that fails once on the second event: returns 1 (only the first published); the second is pending with attempts 1 and last_error set; the third untouched. The next relay_once returns 2 and publishes them in order.",
+  "edgeCases": [
+    "A crash between the order insert and the outbox insert must leave no order behind",
+    "Blank or whitespace-only customer, zero or negative total",
+    "A failing event blocks the events after it until it succeeds or is parked as dead",
+    "An event that always fails becomes 'dead' after max_attempts runs and stops blocking",
+    "The relay process dying mid-batch: events already published are already marked 'sent' in the database"
+  ],
+  "tests": [
+    "test_place_order_writes_order_and_event",
+    "test_place_order_is_atomic",
+    "test_place_order_validates_input",
+    "test_relay_publishes_in_order_and_marks_sent",
+    "test_relay_respects_batch_size",
+    "test_relay_failure_keeps_event_pending_and_stops",
+    "test_relay_retries_on_next_run",
+    "test_relay_parks_poison_event_as_dead",
+    "test_each_success_is_committed_before_the_next_publish"
+  ],
+  "hints": [
+    "Conceptual: the outbox turns 'save data AND publish' (two systems, no shared transaction) into 'save data AND save the intent to publish' (one database, one transaction). Publishing becomes a separate step that can be retried, so it must remember its progress in the database after every event.",
+    "Specific: in place_order, get the new order id from cursor.lastrowid inside the same `with conn:` block as both inserts. In relay_once, fetch the pending rows first, then loop: try publish; on success update to 'sent' in its own `with conn:`; on an exception update attempts/last_error/status in its own `with conn:` and break.",
+    "Implementation: SELECT id, topic, payload, attempts FROM outbox WHERE status = 'pending' ORDER BY id LIMIT ?. In the except branch compute attempts += 1 and status = 'dead' if attempts >= max_attempts else 'pending', then UPDATE outbox SET attempts = ?, last_error = ?, status = ? WHERE id = ?. Catch Exception, not BaseException, so a real crash still stops the process."
+  ],
+  "evaluation": [
+    "All 9 tests pass",
+    "The order and its event can only be committed together",
+    "Progress is committed per event, so a crash causes at most one duplicate publish, never a lost event",
+    "Order is preserved: no event is published while an older one is still pending"
+  ]
+}

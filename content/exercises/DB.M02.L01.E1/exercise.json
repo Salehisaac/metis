@@ -1,0 +1,50 @@
+{
+  "id": "DB.M02.L01.E1",
+  "lesson": "DB.M02.L01",
+  "title": "Extend the messaging schema: reactions and blocks",
+  "problem": "The messenger gets two features: emoji reactions on messages, and blocking users. Design both tables in schema_ext.py so the database itself rejects every invalid row, and make open_db() turn on foreign key enforcement. The tests only insert and delete rows and check what the database accepts.",
+  "requirements": [
+    "Edit only schema_ext.py",
+    "reactions has the columns message_id, user_id, emoji, created_at; blocks has blocker_id, blocked_id, created_at",
+    "A reaction must point to an existing message and an existing user; a block to two existing users",
+    "The same user can't add the same emoji to the same message twice; different emoji, users or messages are fine",
+    "emoji and created_at are required; emoji can't be the empty string",
+    "Deleting a message deletes its reactions",
+    "No one can block themselves; a block exists at most once per (blocker, blocked) pair, and the direction matters",
+    "open_db() enforces foreign keys on its connection"
+  ],
+  "contract": "EXTRA_SCHEMA: str with two CREATE TABLE statements, run after chatdb.SCHEMA and chatdb.DATA. open_db() -> sqlite3.Connection with PRAGMA foreign_keys returning (1,)",
+  "expectedBehavior": "Inserting reaction (1, 2, '👍', ...) works; inserting it again raises sqlite3.IntegrityError; DELETE FROM messages WHERE id = 1 removes that message's reactions; inserting block (3, 3, ...) raises sqlite3.IntegrityError",
+  "edgeCases": [
+    "Same user, same message, different emoji: allowed",
+    "Unknown message id or user id: rejected",
+    "emoji None (NULL) or '': rejected",
+    "A blocks B and B blocks A: both allowed",
+    "A blocks A: rejected",
+    "Foreign keys only work if the connection turns them on"
+  ],
+  "tests": [
+    "test_foreign_keys_are_enforced",
+    "test_react_to_a_message",
+    "test_same_reaction_twice_is_rejected",
+    "test_other_emoji_and_other_users_are_allowed",
+    "test_reaction_needs_an_existing_message_and_user",
+    "test_emoji_cannot_be_missing_or_empty",
+    "test_deleting_a_message_deletes_its_reactions",
+    "test_block_a_user",
+    "test_blocks_are_directional_and_unique",
+    "test_cannot_block_yourself",
+    "test_block_needs_existing_users"
+  ],
+  "hints": [
+    "Conceptual: every rule in the docstring is one constraint. 'Points to an existing row' is a foreign key, 'at most once per combination' is a primary key or UNIQUE over several columns, 'can't be X' is NOT NULL or CHECK, 'disappears with' is an ON DELETE action.",
+    "Specific: neither table needs its own id column; a composite PRIMARY KEY over (message_id, user_id, emoji) and over (blocker_id, blocked_id) expresses 'only once'. A table-level CHECK can compare two columns. SQLite ignores foreign keys unless the connection runs PRAGMA foreign_keys = ON.",
+    "Implementation: message_id INTEGER NOT NULL REFERENCES messages(id) ON DELETE CASCADE; emoji TEXT NOT NULL CHECK (emoji <> ''); PRIMARY KEY (...) and CHECK (blocker_id <> blocked_id) go after the columns. In open_db, run the PRAGMA before executescript."
+  ],
+  "evaluation": [
+    "All eleven tests pass",
+    "Every rule is enforced by the schema, not by Python code",
+    "Each table has a primary key that matches its 'only once' rule",
+    "ON DELETE CASCADE only where the docstring asks for it"
+  ]
+}

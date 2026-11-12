@@ -1,0 +1,41 @@
+{
+  "id": "DB.M07.L01.E1",
+  "lesson": "DB.M07.L01",
+  "title": "Map Contact and Reaction with typed Mapped[] columns",
+  "problem": "models.py already maps User and Message. Add two models from the comments: Contact (a user's address book, with a composite primary key) and Reaction (emoji reactions on messages, with a three-column unique constraint).",
+  "requirements": [
+    "Contact maps table contacts: owner_id and contact_id both reference users.id and together form the primary key",
+    "Contact.nickname is optional with at most 64 characters; added_at is required and filled by the database",
+    "Reaction maps table reactions: integer id primary key; message_id -> messages.id, user_id -> users.id, emoji (at most 16 characters), all required",
+    "A UniqueConstraint named uq_reactions_message_user_emoji on (message_id, user_id, emoji)",
+    "Use typed Mapped[] annotations and mapped_column()"
+  ],
+  "contract": "models.Contact and models.Reaction, subclasses of models.Base",
+  "expectedBehavior": "After create_all, inserting a contact without added_at gets a timestamp from the database; inserting the same (message, user, emoji) twice raises IntegrityError, but a different emoji is fine",
+  "edgeCases": [
+    "Optional vs required columns",
+    "Composite primary key column order",
+    "A database-side default vs a Python-side default",
+    "Uniqueness across three columns, not one"
+  ],
+  "tests": [
+    "test_contacts_table_columns",
+    "test_contacts_foreign_keys",
+    "test_reactions_table_columns",
+    "test_reactions_unique_constraint",
+    "test_contact_rows_get_added_at_from_the_database",
+    "test_same_contact_twice_is_rejected",
+    "test_same_emoji_twice_is_rejected_but_other_emoji_is_fine",
+    "test_emoji_is_required"
+  ],
+  "hints": [
+    "Conceptual: the annotation (Mapped[str] or Mapped[str | None]) decides NOT NULL; mapped_column() adds the length, foreign key, primary key flag and default. Constraints over several columns belong to the table.",
+    "Specific: two columns with primary_key=True form a composite key. 'Filled in by the database' means server_default, not default. The three-column unique constraint goes in __table_args__.",
+    "Implementation: nickname: Mapped[str | None] = mapped_column(String(64)); added_at uses server_default=func.now(); __table_args__ = (UniqueConstraint('message_id', 'user_id', 'emoji', name='uq_reactions_message_user_emoji'),)."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "Typed Mapped[] annotations everywhere, no legacy Column() attributes",
+    "Constraint names are explicit"
+  ]
+}

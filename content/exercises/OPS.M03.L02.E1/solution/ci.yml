@@ -1,0 +1,20 @@
+# In a real repository this file lives at .github/workflows/ci.yml.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest -q

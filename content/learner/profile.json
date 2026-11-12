@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/LEARNER_PROFILE.md",
+  "background": "About 2 years adding features to a Go microservice messenger (go-zero, MySQL, Redis, gRPC, Kafka), mostly with AI writing the code. Python: syntax level only. Laravel: personal projects. OOP: Go-style (structs, interfaces, composition).",
+  "goals": [
+    "Python backend job (Python + FastAPI) — primary",
+    "Architecture and design: designing systems independently, not only adding features"
+  ],
+  "preferences": [
+    "Deep explanation of the why, in short chunks, each followed immediately by hands-on practice",
+    "Compare with Go where it helps",
+    "5–10 hours of study per week"
+  ],
+  "observed": [
+    "Prefers speed; tended to skip long written tasks when unsure during the assessment (observed by the mentor, not stated by me)"
+  ],
+  "rules": [
+    "I write all exercise and assessment code myself, without AI; the mentor helps only after I've attempted",
+    "Never give me a full solution unless I explicitly ask for it after an attempt"
+  ]
+}

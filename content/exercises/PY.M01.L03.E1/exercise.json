@@ -1,0 +1,33 @@
+{
+  "id": "PY.M01.L03.E1",
+  "lesson": "PY.M01.L03",
+  "title": "Fix initials() using only the test failures",
+  "problem": "initials() should turn a full name into its uppercase initials, but some tests fail. Run pytest, read each failure (got vs expected, the 'where' line, the file:line) and fix the function. Don't change the tests.",
+  "requirements": [
+    "Return the first letter of each word, uppercased",
+    "Words are separated by any amount of whitespace",
+    "An empty or blank name returns an empty string",
+    "Don't modify test_initials.py"
+  ],
+  "contract": "initials(full_name: str) -> str",
+  "expectedBehavior": "initials('ada lovelace') == 'AL'; initials('  grace   hopper ') == 'GH'; initials('') == ''",
+  "edgeCases": ["Leading, trailing and repeated spaces", "Empty string", "A single name", "Names already in uppercase"],
+  "tests": [
+    "test_two_names",
+    "test_three_names",
+    "test_single_name",
+    "test_already_uppercase",
+    "test_extra_spaces",
+    "test_empty"
+  ],
+  "hints": [
+    "Conceptual: there are two separate bugs. Run pytest -x, fix the first one, rerun, and repeat. One is about case, one is about how the name is split.",
+    "Specific: the IndexError comes from part[0] on an empty string. Which split call produces empty strings? (L03, section 2.)",
+    "Implementation: loop over full_name.split() (no argument) and add part[0].upper() to the result."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "The tests are unchanged",
+    "The fix addresses the causes (split and case); no special-casing of test inputs"
+  ]
+}

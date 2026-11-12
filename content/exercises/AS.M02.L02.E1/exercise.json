@@ -1,0 +1,42 @@
+{
+  "id": "AS.M02.L02.E1",
+  "lesson": "AS.M02.L02",
+  "title": "Partial results vs all-or-nothing",
+  "problem": "checks.py has two functions that run many async calls at once, and both use plain asyncio.gather. health_report should report on every host even if some probes fail, but one failing probe crashes the whole report. load_settings needs every setting, so on the first failure it should cancel the fetches still running before raising, but plain gather leaves them running. Give each function the right error semantics.",
+  "requirements": [
+    "health_report returns (up, down): up maps host to status code, down maps host to the exception its probe raised",
+    "In health_report, a failing probe neither stops nor cancels the other probes",
+    "load_settings returns {name: value} when every fetch succeeds",
+    "When a fetch in load_settings fails, the other running fetches are cancelled and have finished cancelling before load_settings raises",
+    "load_settings raises the failure inside an ExceptionGroup"
+  ],
+  "contract": "async def health_report(hosts: list[str], probe) -> tuple[dict[str, int], dict[str, Exception]]\nasync def load_settings(names: list[str], fetch) -> dict[str, str]",
+  "expectedBehavior": "health_report(['api', 'bad-db', 'web'], probe) returns ({'api': 200, 'web': 200}, {'bad-db': ConnectionError('bad-db refused')}). load_settings(['db_url', 'missing', 'secret'], fetch) raises ExceptionGroup([KeyError('missing')]) only after db_url and secret were cancelled.",
+  "edgeCases": [
+    "No hosts / no names: ({}, {}) and {}",
+    "All probes succeed: down is empty",
+    "A slow probe still finishes when a fast one fails",
+    "The error leaves load_settings only after the cancelled fetches have finished their cleanup"
+  ],
+  "tests": [
+    "test_report_all_up",
+    "test_report_splits_failures",
+    "test_report_failure_does_not_stop_others",
+    "test_report_empty",
+    "test_settings_all_present",
+    "test_settings_failure_cancels_the_rest_first",
+    "test_settings_error_arrives_in_exception_group",
+    "test_settings_empty"
+  ],
+  "hints": [
+    "Conceptual: gather by default propagates the first error and lets the others run on; with return_exceptions=True it collects errors as results. A TaskGroup cancels the remaining tasks, waits for them, then raises an ExceptionGroup.",
+    "Specific: health_report needs gather(..., return_exceptions=True) and an isinstance check per result. load_settings needs an asyncio.TaskGroup instead of gather.",
+    "Implementation: in health_report, zip hosts with results and put each into down if isinstance(result, Exception), else into up. In load_settings, create one task per name inside `async with asyncio.TaskGroup() as tg:` and build the dict from task.result() after the block."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "health_report doesn't use try/except around each probe when return_exceptions does the job",
+    "load_settings doesn't catch and re-wrap exceptions by hand",
+    "The learner can explain which semantics fits which use case"
+  ]
+}

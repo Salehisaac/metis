@@ -1,0 +1,44 @@
+{
+  "id": "DB.M05.L01.E1",
+  "lesson": "DB.M05.L01",
+  "title": "A query-plan helper: explain() and full_scans()",
+  "problem": "Write two small helpers you can reuse in tests and debugging scripts: explain() returns the plan's detail lines for a SQL statement, and full_scans() lists the tables a query reads with a full SCAN.",
+  "requirements": [
+    "explain() returns the detail text of every EXPLAIN QUERY PLAN row, in order, as a list of strings",
+    "Pass params with ? placeholders exactly as you would for the real query; params defaults to an empty tuple",
+    "Never run the statement itself: explaining a DELETE must delete nothing",
+    "full_scans() returns the table names (or aliases, exactly as the plan shows them) of every SCAN row, in plan order",
+    "'SCAN CONSTANT ROW' is not a table scan"
+  ],
+  "contract": "explain(conn, sql, params=()) -> list[str]; full_scans(conn, sql, params=()) -> list[str]",
+  "expectedBehavior": "explain(conn, 'SELECT * FROM messages WHERE id = ?', (1,)) == ['SEARCH messages USING INTEGER PRIMARY KEY (rowid=?)']; full_scans(conn, 'SELECT * FROM messages WHERE sender_id = ?', (1,)) == ['messages']",
+  "edgeCases": [
+    "No params",
+    "A plan with several rows (SCAN plus USE TEMP B-TREE)",
+    "A query with no table (SELECT 1 + 1)",
+    "Aliases in a JOIN",
+    "The plan changes after CREATE INDEX",
+    "Explaining a DELETE"
+  ],
+  "tests": [
+    "test_explain_primary_key_lookup",
+    "test_explain_returns_every_row_in_order",
+    "test_explain_without_params",
+    "test_full_scans_unindexed_filter",
+    "test_full_scans_none_when_searching",
+    "test_full_scans_uses_alias_from_plan",
+    "test_constant_row_is_not_a_table_scan",
+    "test_plan_changes_after_index_is_added",
+    "test_explaining_a_delete_does_not_delete"
+  ],
+  "hints": [
+    "Conceptual: EXPLAIN QUERY PLAN in front of any statement makes SQLite return the plan as rows instead of executing the statement. Each row has four fields; only one of them is the text you saw in the lesson.",
+    "Specific: the detail is the fourth field (index 3). For full_scans, split each detail on whitespace: a scan's first word is SCAN and its second word is the table name or alias. Exclude the exact text 'SCAN CONSTANT ROW'.",
+    "Implementation: run conn.execute('EXPLAIN QUERY PLAN ' + sql, params).fetchall() and build a list of row[3]. In full_scans, loop over explain(...) and collect words[1] when words[0] == 'SCAN' and the detail isn't the constant row."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "Parameters are passed with placeholders, never formatted into the SQL",
+    "full_scans reuses explain instead of duplicating the query"
+  ]
+}

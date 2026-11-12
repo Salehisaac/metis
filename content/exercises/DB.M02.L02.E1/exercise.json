@@ -1,0 +1,42 @@
+{
+  "id": "DB.M02.L02.E1",
+  "lesson": "DB.M02.L02",
+  "title": "Four INNER JOINs on the messaging schema",
+  "problem": "joins.py has four empty queries that each need two tables: a chat transcript with usernames, the member names of a chat, the messages of a user given by username, and the chats two users share. Write them with JOIN ... ON and aliases.",
+  "requirements": [
+    "Edit only joins.py; use ? placeholders in the order given in the comments",
+    "CHAT_TRANSCRIPT: (message id, username, body) for one chat, ordered by sent_at then message id",
+    "CHAT_MEMBER_NAMES: (username,) of one chat's members, alphabetical",
+    "MESSAGES_BY_USERNAME: (message id, chat_id) of the messages sent by the user with that username, ordered by message id",
+    "SHARED_CHATS: (chat_id,) of chats where both users are members, ordered by chat_id",
+    "Every column reference that could be ambiguous is qualified with its table alias"
+  ],
+  "contract": "Each constant is one SELECT as a str. Parameters: CHAT_TRANSCRIPT (chat_id,), CHAT_MEMBER_NAMES (chat_id,), MESSAGES_BY_USERNAME (username,), SHARED_CHATS (user_a, user_b)",
+  "expectedBehavior": "CHAT_TRANSCRIPT with (2,) returns [(4, 'ana', 'lunch?'), (5, 'ben', 'sure'), (12, 'ana', 'see you')]; SHARED_CHATS with (1, 2) returns [(1,), (2,), (3,)]",
+  "edgeCases": [
+    "A chat with no messages: empty transcript",
+    "Messages with the same sent_at: ordered by id",
+    "A username that doesn't exist, or a user who never wrote: empty list",
+    "Two users with no chat in common: empty list"
+  ],
+  "tests": [
+    "test_chat_transcript",
+    "test_chat_transcript_orders_ties_by_id",
+    "test_chat_transcript_of_empty_chat",
+    "test_chat_member_names",
+    "test_messages_by_username",
+    "test_messages_by_unknown_or_silent_user",
+    "test_shared_chats",
+    "test_shared_chats_none_in_common"
+  ],
+  "hints": [
+    "Conceptual: start from the table that has one row per result row (a message, a membership), then JOIN the table that holds the missing column, matching the foreign key to the primary key.",
+    "Specific: messages.sender_id points to users.id; chat_members.user_id points to users.id. For SHARED_CHATS, join chat_members to itself on chat_id, with two different aliases: one row for user a, one for user b.",
+    "Implementation: SELECT m.id, u.username, m.body FROM messages AS m JOIN users AS u ON u.id = m.sender_id WHERE ... The self-join is FROM chat_members AS a JOIN chat_members AS b ON b.chat_id = a.chat_id WHERE a.user_id = ? AND b.user_id = ?."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "Each JOIN has an ON that matches a foreign key to the key it references",
+    "Filtering by username happens through the join, not with a hard-coded id"
+  ]
+}

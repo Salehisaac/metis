@@ -1,0 +1,48 @@
+{
+  "id": "PY.M07.L03.E1",
+  "lesson": "PY.M07.L03",
+  "title": "A retry decorator with arguments",
+  "problem": "Network calls fail now and then. Write retry(times, exceptions=(Exception,)), a decorator factory: @retry(3, exceptions=(ConnectionError,)) makes a function try again when it raises one of the listed exceptions, up to `times` calls in total, and re-raise the last error if every attempt fails. Other exceptions must not be retried, and the decorated function must keep its name and docstring.",
+  "requirements": [
+    "retry(times, exceptions) returns a decorator; the decorator returns a wrapper that accepts any positional and keyword arguments and passes them on",
+    "The wrapped function is called at most `times` times per call of the wrapper; the first successful result is returned",
+    "Only exceptions that are instances of one of `exceptions` (subclasses included) are retried; any other exception propagates immediately",
+    "When the last attempt fails, the last exception itself is re-raised (not a new one)",
+    "retry(0) or a negative number raises ValueError right away, when retry(...) is called",
+    "Use functools.wraps so __name__, __doc__ and __wrapped__ refer to the original function",
+    "No sleeping or backoff (keep the tests fast)"
+  ],
+  "contract": "retry(times: int, exceptions: tuple[type[BaseException], ...] = (Exception,)) -> Callable[[F], F]",
+  "expectedBehavior": "A function that fails twice with ConnectionError and then returns 'ok', decorated with @retry(3), returns 'ok' after 3 calls; with @retry(2) it raises the second ConnectionError after 2 calls.",
+  "edgeCases": [
+    "times == 1: no retry at all",
+    "times < 1: ValueError when retry(...) is called",
+    "An exception type that isn't listed: no retry",
+    "A subclass of a listed exception: retried",
+    "Keyword-only arguments pass through",
+    "Each call of the decorated function starts again with `times` attempts"
+  ],
+  "tests": [
+    "test_success_first_time_calls_once",
+    "test_retries_until_success",
+    "test_reraises_last_error_after_all_attempts",
+    "test_times_one_means_no_retry",
+    "test_other_exceptions_are_not_retried",
+    "test_subclasses_count_as_listed_exceptions",
+    "test_passes_arguments_and_returns_result",
+    "test_each_call_gets_fresh_attempts",
+    "test_keeps_name_and_docstring",
+    "test_times_must_be_positive"
+  ],
+  "hints": [
+    "Conceptual: there are three layers. retry(...) receives the settings, the decorator receives the function, and the wrapper runs on every call. Validation of `times` belongs to the outer layer because it must happen when retry(...) is called.",
+    "Specific: `except exceptions:` accepts a tuple of exception types and matches subclasses. Keep the attempt counter local to the wrapper (a loop variable), not in an outer scope, so every call starts fresh. A bare `raise` inside except re-raises the current exception unchanged.",
+    "Implementation: in the wrapper, loop attempt over 1..times; inside, try to return func(*args, **kwargs); in `except exceptions:`, re-raise if this was the last attempt, otherwise let the loop continue."
+  ],
+  "evaluation": [
+    "All ten tests pass",
+    "functools.wraps is used",
+    "Unlisted exceptions are not caught at all (no catching everything and filtering by hand)",
+    "No special-casing of test inputs"
+  ]
+}

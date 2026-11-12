@@ -1,0 +1,49 @@
+{
+  "id": "PY.M03.L01.E1",
+  "lesson": "PY.M03.L01",
+  "title": "Paginate a list and take the last N items",
+  "problem": "An API returns events a page at a time, and a dashboard shows the most recent events. Implement page(items, number, size) and last(items, n) in paging.py using slicing. Both must return new lists and must handle the edges: partial pages, pages past the end, empty input and n == 0.",
+  "requirements": [
+    "page returns page `number` (1-based: page 1 is the first `size` items) as a new list",
+    "page returns [] for a page past the end, and the shorter remainder for the last partial page",
+    "page raises ValueError if number < 1 or size < 1",
+    "last returns the last n items as a new list, or all items if there are fewer than n",
+    "last returns [] when n == 0 and raises ValueError when n < 0",
+    "Neither function changes `items`"
+  ],
+  "contract": "page(items: list, number: int, size: int) -> list\nlast(items: list, n: int) -> list",
+  "expectedBehavior": "With 7 events and size 3: page 1 -> e1..e3, page 3 -> [e7], page 4 -> []. last(events, 2) -> [e6, e7]; last(events, 0) -> []; last(events, 10) -> all 7.",
+  "edgeCases": [
+    "Last partial page and pages far past the end",
+    "Empty list",
+    "size larger than the list",
+    "number or size of 0 or below",
+    "last with n == 0 (the -0 trap) and n larger than the list",
+    "The result must be a new list: appending to it must not change the input"
+  ],
+  "tests": [
+    "test_first_page",
+    "test_middle_page",
+    "test_last_partial_page",
+    "test_page_past_the_end_is_empty",
+    "test_page_of_empty_list",
+    "test_page_bigger_than_list",
+    "test_page_rejects_bad_number_and_size",
+    "test_page_returns_a_new_list",
+    "test_last_n",
+    "test_last_more_than_available",
+    "test_last_zero_is_empty",
+    "test_last_rejects_negative"
+  ],
+  "hints": [
+    "Conceptual: a page is one slice, items[start:end]. Slices clamp out-of-range bounds and always return a new list, so pages past the end need no special case. Validation is the only `if` you need in page.",
+    "Specific: page `number` starts at index (number - 1) * size and ends size items later. For last, xs[-n:] breaks when n is 0 (-0 is 0); compute a non-negative start index from len(items) instead.",
+    "Implementation: in page, raise ValueError when number < 1 or size < 1, then slice from the start index to start + size. In last, raise for n < 0, then slice from len(items) - n, but make sure that start can't go negative (a negative start would count from the end)."
+  ],
+  "evaluation": [
+    "All tests pass",
+    "Each function is one slice plus validation: no loops, no manual bounds checks for 'past the end'",
+    "Correct for n == 0 and n > len(items) without special-casing every edge",
+    "Clear ValueError messages"
+  ]
+}

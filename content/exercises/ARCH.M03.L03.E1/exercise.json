@@ -1,0 +1,46 @@
+{
+  "id": "ARCH.M03.L03.E1",
+  "lesson": "ARCH.M03.L03",
+  "title": "An idempotent payment consumer with retries and backoff",
+  "problem": "The billing worker consumes 'payment.captured' messages from an at-least-once queue, so it sometimes receives the same message twice. Make handle_payment idempotent with a processed-messages table, and write the retry helpers the worker uses around flaky calls: backoff_delay and with_retries.",
+  "requirements": [
+    "handle_payment records (consumer, message id), adds the amount to the invoice and inserts a payments row, all in one transaction",
+    "A message id this consumer already processed returns False and changes nothing; the same id for another consumer is processed normally",
+    "An unknown invoice raises UnknownInvoice and leaves no processed marker, so a later redelivery can succeed",
+    "backoff_delay(attempt, base=0.5, cap=8.0, rng=None) = min(cap, base * 2 ** (attempt - 1)), or rng.uniform(0, that) when rng is given",
+    "with_retries(fn, sleep, max_attempts=4, rng=None) retries only TransientError, sleeps backoff_delay(n, rng=rng) before retry n, never sleeps after the last attempt, and re-raises the last error",
+    "Other exceptions propagate immediately, without sleeping"
+  ],
+  "contract": "handle_payment(conn, message: dict, consumer: str = 'billing') -> bool\nbackoff_delay(attempt: int, base: float = 0.5, cap: float = 8.0, rng=None) -> float\nwith_retries(fn, sleep, max_attempts: int = 4, rng=None) -> whatever fn returns",
+  "expectedBehavior": "handle_payment(conn, msg) returns True and paid_cents becomes 500; the same msg again returns False and paid_cents stays 500. backoff_delay for attempts 1..6 gives 0.5, 1.0, 2.0, 4.0, 8.0, 8.0. A function failing twice with TransientError and then returning 'ok' gives 'ok' after sleeps [0.5, 1.0].",
+  "edgeCases": [
+    "Exact duplicate delivery (same id, same consumer)",
+    "Same message id seen by two different consumers",
+    "Failure in the middle of handling: the marker must roll back with the effect",
+    "Backoff beyond the cap",
+    "Last attempt fails: no sleep after it, the error propagates",
+    "A non-transient error (bad payload) on the first call"
+  ],
+  "tests": [
+    "test_duplicate_delivery_is_applied_once",
+    "test_different_messages_all_apply",
+    "test_dedup_is_per_consumer",
+    "test_failure_leaves_no_marker_so_redelivery_works",
+    "test_backoff_doubles_and_caps",
+    "test_backoff_jitter_is_within_the_delay",
+    "test_retries_transient_errors_then_succeeds",
+    "test_gives_up_after_max_attempts",
+    "test_permanent_errors_are_not_retried"
+  ],
+  "hints": [
+    "Conceptual: 'already processed' and 'apply the effect' must commit together. If the marker commits without the effect, a crash loses the payment; if the effect commits without the marker, a redelivery doubles it. The primary key on (consumer, message_id) lets the database detect the duplicate for you.",
+    "Specific: inside one `with conn:` block, INSERT the marker first and catch sqlite3.IntegrityError around just that statement to return False. Then UPDATE the invoice and check rowcount; raising UnknownInvoice inside the block rolls the marker back. For with_retries, loop attempt from 1 to max_attempts and catch only TransientError.",
+    "Implementation: backoff is `delay = min(cap, base * 2 ** (attempt - 1))`, then `return delay if rng is None else rng.uniform(0, delay)`. In with_retries: `try: return fn()`, `except TransientError: if attempt == max_attempts: raise`, otherwise `sleep(backoff_delay(attempt, rng=rng))`."
+  ],
+  "evaluation": [
+    "All 9 tests pass",
+    "Deduplication is enforced by a primary key in the same transaction as the effect, not by a SELECT check",
+    "Retries are limited, capped and only for transient errors",
+    "sleep is injected, so tests run instantly"
+  ]
+}

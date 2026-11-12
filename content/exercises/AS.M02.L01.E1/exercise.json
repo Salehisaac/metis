@@ -1,0 +1,37 @@
+{
+  "id": "AS.M02.L01.E1",
+  "lesson": "AS.M02.L01",
+  "title": "Fetch quotes concurrently",
+  "problem": "fetch_quotes asks a slow async API for one stock quote per symbol, but awaits each lookup before starting the next, so 4 symbols take 4 round trips. Make the lookups run concurrently while keeping the result in input order and fetching each distinct symbol only once.",
+  "requirements": [
+    "All distinct symbols are looked up concurrently (with 4 distinct symbols, all 4 lookups are in flight at once)",
+    "The result dict is keyed in first-seen input order, not in the order lookups finish",
+    "Each distinct symbol is fetched exactly once",
+    "fetch_quotes stays async def and awaits get_quote's coroutines (no threads)"
+  ],
+  "contract": "async def fetch_quotes(symbols: list[str], get_quote: Callable[[str], Awaitable[float]]) -> dict[str, float]",
+  "expectedBehavior": "fetch_quotes(['SLOW', 'FAST', 'MID'], api) returns a dict whose keys are ['SLOW', 'FAST', 'MID'] even though FAST finishes first, in about the time of the slowest lookup.",
+  "edgeCases": [
+    "Empty list: {} and no calls",
+    "Duplicates (IBM, IBM, SAP, IBM): 2 calls, keys ['IBM', 'SAP']",
+    "Lookups that finish in a different order than they started"
+  ],
+  "tests": [
+    "test_returns_all_quotes",
+    "test_lookups_run_concurrently",
+    "test_order_follows_input_not_finish_time",
+    "test_duplicates_fetched_once",
+    "test_empty_list"
+  ],
+  "hints": [
+    "Conceptual: awaiting coroutines one by one is sequential. To overlap the waits, hand all of them to the event loop first, then wait for all of them together.",
+    "Specific: remove duplicates while keeping order (dict.fromkeys does that), then start one task per symbol inside an asyncio.TaskGroup, or pass all coroutines to asyncio.gather.",
+    "Implementation: with a TaskGroup, keep a dict {symbol: tg.create_task(get_quote(symbol))}; after the async with block ends, build the result from each task's .result(). With gather, zip the unique symbols with the returned list."
+  ],
+  "evaluation": [
+    "All five tests pass",
+    "Results are matched to symbols by position or by key, never by completion order",
+    "No sequential await inside the loop",
+    "The learner can explain why `await asyncio.gather(...)` returns results in argument order"
+  ]
+}

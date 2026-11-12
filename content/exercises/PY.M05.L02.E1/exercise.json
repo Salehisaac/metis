@@ -1,0 +1,46 @@
+{
+  "id": "PY.M05.L02.E1",
+  "lesson": "PY.M05.L02",
+  "title": "Version and Release dataclasses",
+  "problem": "release.py models software releases. Make Version an immutable, hashable, correctly ordered dataclass with a parse classmethod, a dotted __str__ and next_minor(). Give Release a notes list that is empty by default and never shared between releases.",
+  "requirements": [
+    "Version(major, minor, patch) compares, sorts and hashes by (major, minor, patch) as numbers, so 1.10.0 > 1.9.3",
+    "Assigning to a field of a Version raises dataclasses.FrozenInstanceError",
+    "Version.parse(text) accepts exactly three dot-separated non-negative integers, ignoring whitespace around the whole string; anything else raises ValueError",
+    "str(v) is 'major.minor.patch'; repr(v) stays the generated dataclass repr",
+    "v.next_minor() returns a new Version with minor + 1 and patch 0, leaving v unchanged",
+    "Release(version) has notes == []; Release(version, notes) uses the given list; two releases never share a notes list",
+    "Release stays a normal (mutable) dataclass"
+  ],
+  "contract": "@dataclass(...) class Version: major: int; minor: int; patch: int; parse(cls, text: str) -> Version (classmethod); __str__(self) -> str; next_minor(self) -> Version.  @dataclass class Release: version: Version; notes: list[str] (default: a new empty list)",
+  "expectedBehavior": "Version.parse(' 1.10.2 ') == Version(1, 10, 2); str(Version(1, 10, 2)) == '1.10.2'; sorted([Version.parse('1.10.0'), Version.parse('1.9.3')]) puts 1.9.3 first; Version(1, 9, 7).next_minor() == Version(1, 10, 0); Release(Version(1, 0, 0)).notes == []",
+  "edgeCases": [
+    "1.10.0 vs 1.9.3: numeric order, not string order",
+    "Wrong number of parts: '', '1.2', '1.2.3.4'",
+    "Parts that aren't plain digits: 'a.b.c', '1.-2.3', '1..3', '1. 2.3', 'v1.2.3'",
+    "Whitespace around the whole string is fine: '  2.0.1\\n'",
+    "Two equal Versions in a set count once",
+    "Appending to one release's notes must not change another release"
+  ],
+  "tests": [
+    "test_parse_valid",
+    "test_parse_strips_surrounding_whitespace",
+    "test_parse_rejects_bad_input",
+    "test_str_is_dotted",
+    "test_versions_sort_numerically",
+    "test_version_is_frozen_and_hashable",
+    "test_next_minor_returns_new_version",
+    "test_release_notes_default_and_not_shared"
+  ],
+  "hints": [
+    "Conceptual: two dataclass options give you ordering, immutability and hashing for free (sections 3 to 5). Ordering compares fields in the order they are declared. For parse, decide exactly what a valid part looks like before writing code, and notice what int() would wrongly accept.",
+    "Specific: Version needs frozen=True and order=True. In parse, strip, split on '.', require exactly 3 parts that are all str.isdigit(), and only then convert. Release's list needs field(default_factory=list).",
+    "Implementation: parts = text.strip().split('.'); if len(parts) != 3 or not all(p.isdigit() for p in parts): raise ValueError(...); return cls(*(int(p) for p in parts)). __str__ is an f-string of the three fields. next_minor can return dataclasses.replace(self, minor=self.minor + 1, patch=0)."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "Ordering and hashing come from dataclass options, not hand-written __lt__/__hash__",
+    "parse validates every part before converting; no special-casing of test inputs",
+    "Release uses default_factory, not a shared list"
+  ]
+}

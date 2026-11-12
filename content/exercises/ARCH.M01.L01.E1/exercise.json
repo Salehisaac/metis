@@ -1,0 +1,47 @@
+{
+  "id": "ARCH.M01.L01.E1",
+  "lesson": "ARCH.M01.L01",
+  "title": "Split a fat endpoint into API, service and repository",
+  "problem": "app.py registers people for events. One endpoint function parses HTTP, applies the rules (event exists, not full, no duplicate email) and runs SQL. Move the SQL into repository.py and the rules into service.py, so app.py keeps only HTTP. The HTTP behaviour must not change.",
+  "requirements": [
+    "repository.py: implement RegistrationRepo.get_capacity, count_registrations and add (add returns False on a duplicate instead of raising)",
+    "service.py: implement register(repo, event_id, email) -> seats left; raise EventNotFound, EventFull or AlreadyRegistered (all subclasses of RegistrationError)",
+    "Emails are compared after strip() and lower()",
+    "Check order stays as today: unknown event, then full, then duplicate",
+    "app.py: no SQL; it calls the service and maps each service error to the same status code and detail as before",
+    "service.py and repository.py must not import FastAPI"
+  ],
+  "contract": "RegistrationRepo(conn).get_capacity(event_id) -> int | None; .count_registrations(event_id) -> int; .add(event_id, email) -> bool\nservice.register(repo, event_id: int, email: str) -> int   # seats left after this registration\nPOST /events/{event_id}/registrations {\"email\": str} -> 201 {event_id, email, seats_left} | 404 {\"detail\": \"event not found\"} | 409 {\"detail\": \"event full\"} | 409 {\"detail\": \"already registered\"}",
+  "expectedBehavior": "With capacity 2: register(repo, 1, 'ana@example.com') returns 1, the next distinct email returns 0, a third raises EventFull. Over HTTP the same calls return 201, 201, 409 'event full'.",
+  "edgeCases": [
+    "Email with surrounding spaces or capitals is the same person: '  Ana@Example.COM ' duplicates 'ana@example.com'",
+    "Unknown event id: EventNotFound / 404",
+    "A full event rejects even a duplicate email with 'event full' (the full check comes first)",
+    "Capacity reached exactly: seats_left 0 is a success, the next one fails"
+  ],
+  "tests": [
+    "test_no_sql_outside_repository",
+    "test_no_fastapi_below_api_layer",
+    "test_app_calls_the_service",
+    "test_repo_reads_and_writes",
+    "test_service_returns_seats_left",
+    "test_service_unknown_event",
+    "test_service_full_event",
+    "test_service_duplicate_is_case_and_space_insensitive",
+    "test_service_errors_share_a_base_class",
+    "test_api_created",
+    "test_api_errors",
+    "test_api_duplicate"
+  ],
+  "hints": [
+    "Conceptual: each layer answers one question. Repository: how is it stored? Service: is it allowed? API: what does HTTP see? Errors flow up as Python exceptions and only the API turns them into status codes.",
+    "Specific: the repository should hide sqlite3 completely, so catch IntegrityError inside add() and return False. The service then raises AlreadyRegistered when add() returns False, without ever importing sqlite3.",
+    "Implementation: in the endpoint, build RegistrationRepo(conn), call service.register inside try, and catch service.RegistrationError once. A dict from exception class to (status, detail) keeps the mapping in one place; raise HTTPException(status, detail)."
+  ],
+  "evaluation": [
+    "All 12 tests pass, including the unchanged API tests",
+    "sqlite3 appears only in repository.py (and db.py); FastAPI only in app.py",
+    "The service can be called and tested without any HTTP request",
+    "Error mapping lives in one place in app.py"
+  ]
+}

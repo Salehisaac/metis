@@ -1,0 +1,40 @@
+{
+  "id": "OPS.M03.L01.E1",
+  "lesson": "OPS.M03.L01",
+  "title": "Make pricing.py pass the team's Ruff checks",
+  "problem": "CI runs `ruff check` and `ruff format --check` with the team's pyproject.toml, and pricing.py fails both. Make it pass without switching rules off. Some findings are style, but two of them are real bugs that the behaviour tests catch.",
+  "requirements": [
+    "`ruff check` exits 0 for pricing.py with the given pyproject.toml",
+    "`ruff format --check` exits 0 for pricing.py",
+    "Don't change pyproject.toml's rules, and don't add noqa comments",
+    "basket_total gives the same totals as before for valid input",
+    "basket_total must not modify the caller's codes list, and must not use a mutable default",
+    "discount_for returns 0 only for unknown codes; a non-string code (a caller bug) must raise instead of being hidden"
+  ],
+  "contract": "discount_for(code: str | None) -> int; basket_total(prices: list[int], codes: list[str] | None = None) -> int",
+  "expectedBehavior": "basket_total([1000, 500], ['welcome']) == 1350; calling basket_total twice without codes gives the same result each time; discount_for(None) raises AttributeError.",
+  "edgeCases": [
+    "Empty prices list: total 0",
+    "Lowercase codes are accepted (they're uppercased)",
+    "Several codes: the best discount wins",
+    "The caller's list is unchanged after the call"
+  ],
+  "tests": [
+    "test_ruff_check_passes",
+    "test_ruff_format_check_passes",
+    "test_no_rules_switched_off",
+    "test_totals_are_unchanged",
+    "test_codes_argument_is_not_mutated",
+    "test_only_unknown_codes_are_swallowed"
+  ],
+  "hints": [
+    "Conceptual: start with the tools. `ruff check --fix` and `ruff format` handle the mechanical findings safely; what's left needs judgment, and each remaining rule code has a page explaining why it exists.",
+    "Specific: the remaining findings are B006 (mutable default argument: the same list is reused by every call), E722 (bare except: it also hides the AttributeError from None), F841 (an unused variable) and E711 (== None). B006 and E722 are the two behaviour bugs.",
+    "Implementation: give codes the default None and build a new list from it plus \"NONE\" instead of appending; catch KeyError instead of everything; delete the unused variable and the dead None check; then run ../../.venv/bin/ruff format pricing.py."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "The fixes for B006 and E722 change behaviour on purpose; everything else keeps it",
+    "You can name what each rule you fixed protects against"
+  ]
+}

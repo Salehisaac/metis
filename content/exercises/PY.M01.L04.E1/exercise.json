@@ -1,0 +1,28 @@
+{
+  "id": "PY.M01.L04.E1",
+  "lesson": "PY.M01.L04",
+  "title": "A .gitignore for your exercise workspace",
+  "problem": "Write the .gitignore for your workspace so Git ignores everything generated (virtual environments, Python caches, pytest caches, test reports) and never ignores your code or tests.",
+  "requirements": [
+    "Ignore any .venv/ directory",
+    "Ignore __pycache__/ directories and *.pyc files at any depth",
+    "Ignore .pytest_cache/ directories",
+    "Ignore result.xml at any depth",
+    "Don't ignore .py files, tests or the .gitignore itself"
+  ],
+  "contract": "A file named .gitignore in this folder (one pattern per line; lines starting with # are comments)",
+  "expectedBehavior": "In a repository using this .gitignore, `git check-ignore` reports .venv/lib/x.py and PY.M01.L03.E1/result.xml as ignored, and words.py as not ignored",
+  "edgeCases": ["Generated files in subfolders (each exercise has its own folder)", "Your own source files must stay visible to git status"],
+  "tests": [
+    "test_ignores_the_virtualenv",
+    "test_ignores_python_caches",
+    "test_ignores_test_reports_anywhere",
+    "test_keeps_your_code"
+  ],
+  "hints": [
+    "Conceptual: a pattern without a slash in the middle matches at any depth. A trailing slash means 'directories only'.",
+    "Specific: you need about five lines: one each for the venv, Python caches (directory and file pattern), the pytest cache and result.xml.",
+    "Implementation: .venv/  __pycache__/  *.pyc  .pytest_cache/  result.xml, one per line. Check with `git check-ignore -v PATH`."
+  ],
+  "evaluation": ["All four tests pass", "No pattern that hides source files (e.g. *.py or *)", "Readable: a comment per group is a plus"]
+}

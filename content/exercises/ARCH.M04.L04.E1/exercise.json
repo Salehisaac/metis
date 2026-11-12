@@ -1,0 +1,48 @@
+{
+  "id": "ARCH.M04.L04.E1",
+  "lesson": "ARCH.M04.L04",
+  "title": "Write a mini design doc: short links with click counts",
+  "problem": "Using BRIEF.md, write a mini design doc in DESIGN.md for a link shortener with daily click counts. The template has the sections; replace every TODO. The tests only check that the doc is complete and well-formed (sections, lists, numbers, a schema, endpoints, a failure-mode table). Whether the design is good is decided in a mentor review, using the checklist from this lesson.",
+  "requirements": [
+    "Keep the nine section headings, in order, and replace every TODO",
+    "At least 3 goals and 2 non-goals as bullet lists",
+    "Estimates with real numbers, including requests per second ('rps')",
+    "A ```sql block with CREATE TABLE and the key or UNIQUE constraint that matters",
+    "At least two endpoints (like `POST /links`) and the redirect status you chose (301/302/307/308)",
+    "At least two alternatives, with reasons ('because ...')",
+    "A failure-mode table with a |---| separator and at least 3 rows",
+    "One line each on security, privacy and observability",
+    "At most 1200 words"
+  ],
+  "contract": "DESIGN.md with the headings: Context and scope, Goals, Non-goals, Estimates, Data model, API, Alternatives considered, Failure modes, Cross-cutting concerns",
+  "expectedBehavior": "All structural tests pass, and the doc answers the brief: how codes are unique, how redirects stay fast at peak, how clicks are counted without slowing redirects, what happens when each dependency fails, and how expiry works.",
+  "edgeCases": [
+    "Custom aliases colliding with each other or with generated codes",
+    "Expired links (what status, and what about cached redirects?)",
+    "A hot link at peak traffic",
+    "Counter flushes repeated after a crash (double counting)",
+    "Redis or the database being down"
+  ],
+  "tests": [
+    "test_all_sections_present_in_order",
+    "test_no_todo_left",
+    "test_short_enough",
+    "test_goals_and_non_goals_are_lists",
+    "test_estimates_have_numbers",
+    "test_data_model_has_a_table_and_a_key",
+    "test_api_lists_endpoints_and_redirect_status",
+    "test_alternatives_give_reasons",
+    "test_failure_modes_table",
+    "test_cross_cutting_concerns"
+  ],
+  "hints": [
+    "Conceptual: start from the numbers in the brief. 10 million clicks a day versus 200,000 creates tells you the system is about redirects and counting, not creating. Then find the hard parts: unique codes, fast redirects, counting clicks without slowing redirects, expiry.",
+    "Specific: the click counter is the most interesting trade-off. Compare a database write per click with counting somewhere fast and flushing in batches, and say what each costs when something crashes. For the redirect status, think about who caches a 301.",
+    "Implementation: fill the sections in this order: Estimates (use the L01 helpers or the L01 quiz numbers), Data model (links with a primary key on the code; a daily counts table keyed by code and day), API, Alternatives, Failure modes (one row per dependency: Redis, database, your worker), then Goals/Non-goals and Context last."
+  ],
+  "evaluation": [
+    "All 10 structural tests pass",
+    "Mentor review with the lesson's checklist: measurable goals, numbers that drive decisions, the uniqueness invariant enforced by the database, a redirect path that meets the latency goal, failure modes each with detection",
+    "Every alternative is decided by a requirement, not by preference"
+  ]
+}

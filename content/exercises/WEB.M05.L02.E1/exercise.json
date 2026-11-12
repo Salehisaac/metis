@@ -1,0 +1,41 @@
+{
+  "id": "WEB.M05.L02.E1",
+  "lesson": "WEB.M05.L02",
+  "title": "Make chat creation one transaction",
+  "problem": "POST /chats creates a chat, adds its members and optionally a first message. Today the chat is committed on its own first, so a bad member id leaves a chat without members, a duplicate title crashes with 500, and the final commit happens in get_session after the response is sent, so a client can be told 201 for data that was never saved. Fix app.py so the whole request is one unit of work: everything is committed together before the response, or nothing is.",
+  "requirements": [
+    "Edit only app.py. Don't change conftest.py or test_chats.py",
+    "get_session only opens, yields and closes the session; it doesn't commit",
+    "create_chat commits exactly once, after all writes, before returning",
+    "Use session.flush() where you need the database-generated chat.id before the commit",
+    "Any IntegrityError (duplicate title, duplicate member) rolls back and answers 409",
+    "An unknown member id answers 404 and leaves no rows behind"
+  ],
+  "contract": "POST /chats {title, member_ids: [int, ...], first_message?: str} -> 201 {id, title, member_ids}; 404 unknown member; 409 duplicate title or member",
+  "expectedBehavior": "A valid request saves 1 chat, N members and 0 or 1 messages; every failing request saves nothing; the app keeps working after a failure",
+  "edgeCases": [
+    "The unknown member is the second one in the list, after the chat and the first member were added",
+    "The same member id twice in one request",
+    "A title that already exists",
+    "A failed request followed by a valid one with the same title"
+  ],
+  "tests": [
+    "test_create_chat_with_members_and_message",
+    "test_create_chat_without_first_message",
+    "test_unknown_member_writes_nothing",
+    "test_duplicate_title_is_409_and_writes_nothing_new",
+    "test_duplicate_member_is_409_not_201",
+    "test_app_works_after_a_failed_create"
+  ],
+  "hints": [
+    "Conceptual: a unit of work is everything one request must change together. Commit marks its end, so there must be one commit, after the last write and before the response. Code after yield in a dependency runs after the response is sent, which is too late to tell the client about a failure.",
+    "Specific: the starter commits early only to get chat.id. flush() sends the pending INSERTs inside the open transaction, so the id is assigned but nothing is permanent yet. An exception before the commit then leaves nothing behind once the session is closed.",
+    "Implementation: delete the commit after yield. In create_chat, wrap the writes and a single session.commit() in try/except IntegrityError; in the except, call session.rollback() and raise HTTPException(409, ...). Replace the early commit with session.flush(). The 404 HTTPException needs no special handling: closing the session rolls back the flushed chat."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "One commit per request, in the endpoint, before the response",
+    "flush used for the generated id, not commit",
+    "IntegrityError is caught around flush and commit, with rollback before the 409"
+  ]
+}

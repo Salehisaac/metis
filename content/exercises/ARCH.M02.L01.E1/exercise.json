@@ -1,0 +1,46 @@
+{
+  "id": "ARCH.M02.L01.E1",
+  "lesson": "ARCH.M02.L01",
+  "title": "Cache-aside for user profiles",
+  "problem": "Profile pages call load_profile(user_id), a slow database query. Put a Redis cache in front of it with the cache-aside pattern: check the cache, and on a miss load from the database and store the result with a TTL.",
+  "requirements": [
+    "profile_key(user_id) returns 'cache:profile:<user_id>'",
+    "On a hit, return the cached profile without calling load_profile",
+    "On a miss, call load_profile once and store the result as JSON with ex=PROFILE_TTL",
+    "A missing user (load_profile returns None) is returned as None and NOT cached (negative caching comes in L03)",
+    "If load_profile raises, the exception propagates and nothing is cached",
+    "Works whether the client returns str (decode_responses=True) or bytes",
+    "A cached value that isn't valid JSON is treated as a miss and overwritten"
+  ],
+  "contract": "profile_key(user_id: int) -> str\nget_profile(r, load_profile, user_id: int) -> dict | None   # load_profile(user_id) -> dict | None",
+  "expectedBehavior": "First get_profile(r, load, 1) calls load once and stores 'cache:profile:1' with a TTL of at most 300 s; the second call returns the same dict without calling load.",
+  "edgeCases": [
+    "Profiles with falsy fields: '' bio, 0 followers, [] tags",
+    "User not found: None, and the next call asks the database again",
+    "Database error: no half-written cache entry",
+    "A bytes-returning client (no decode_responses)",
+    "Corrupt cache entry ('{not json')"
+  ],
+  "tests": [
+    "test_key_format",
+    "test_miss_loads_and_caches_with_ttl",
+    "test_hit_skips_loader",
+    "test_falsy_fields_survive_the_round_trip",
+    "test_not_found_is_not_cached",
+    "test_loader_error_propagates_and_caches_nothing",
+    "test_works_with_a_bytes_client",
+    "test_corrupt_entry_is_treated_as_a_miss",
+    "test_entries_are_per_user"
+  ],
+  "hints": [
+    "Conceptual: the cache is a copy that may be missing; the database is the truth. So every path ends with either a cached copy or a database answer, and the only thing you ever write to the cache is a real database answer.",
+    "Specific: r.get returns None for a miss, so test `is not None`, not truthiness. json.loads accepts both str and bytes, and raises a ValueError subclass (json.JSONDecodeError) on garbage.",
+    "Implementation: key = profile_key(user_id); raw = r.get(key); if raw is not None, try to return json.loads(raw) and on ValueError fall through. Then profile = load_profile(user_id); if it's not None, r.set(key, json.dumps(profile), ex=PROFILE_TTL). Return profile."
+  ],
+  "evaluation": [
+    "All 9 tests pass",
+    "Only real database answers are cached, always with a TTL",
+    "Misses are detected with `is not None`",
+    "No broad `except Exception` that would hide loader errors"
+  ]
+}

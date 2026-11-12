@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metis</title>
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Ccircle cx=%2720%27 cy=%2720%27 r=%2715%27 fill=%27none%27 stroke=%27%23FFD43B%27 stroke-width=%277%27/%3E%3Crect y=%2715%27 width=%2740%27 height=%2710%27 rx=%272%27 fill=%27%2300ADD8%27/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <script type="module" src="assets/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <button id="menu-toggle" class="btn menu-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+    <a class="brand" href="#/" aria-label="Metis, dashboard">
+      <svg class="roundel" width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15" fill="none" stroke="#FFD43B" stroke-width="7"/><rect x="0" y="15" width="40" height="10" rx="2" fill="#00ADD8"/><text x="20" y="23.6" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="9" fill="#14223B">METIS</text></svg>
+      <span>Metis</span></a>
+    <form id="search-form" class="search" role="search">
+      <label for="search-input" class="sr-only">Search the curriculum</label>
+      <input id="search-input" type="search" placeholder="Search lessons, modules…" autocomplete="off">
+      <button class="btn" type="submit">Search</button>
+    </form>
+    <button id="theme-toggle" class="btn" type="button">Theme: dark</button>
+  </header>
+  <div id="banner" class="banner" role="status" hidden></div>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar">
+      <nav id="nav" aria-label="Main"></nav>
+    </aside>
+    <main id="main" tabindex="-1">
+      <div id="content">
+        <p class="muted">Loading…</p>
+        <p class="muted">If this stays: from the project root run <code>python3 -m http.server</code> and open
+          <code>http://localhost:8000/site/</code>. Opening the file directly can't load the app.</p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

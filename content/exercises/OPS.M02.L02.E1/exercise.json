@@ -1,0 +1,42 @@
+{
+  "id": "OPS.M02.L02.E1",
+  "lesson": "OPS.M02.L02",
+  "title": "A JSON log formatter with redaction",
+  "problem": "Write JsonFormatter.format so every log record becomes one line of JSON with the time, level, logger name and message, plus any fields passed with extra=, plus the traceback when there is one. Field names that look sensitive are redacted.",
+  "requirements": [
+    "Output is one line of valid JSON per record (newlines in messages or tracebacks stay escaped inside strings)",
+    "Keys: time (ISO 8601, UTC, from record.created), level (record.levelname), logger (record.name), message (the message with its %-args applied)",
+    "Every field passed with extra= appears as a top-level key; the standard LogRecord attributes (args, msg, lineno, ...) don't",
+    "When the record has exception info, add exc with the formatted traceback",
+    "Any key containing password, secret, token or authorization (case-insensitive) gets the value \"[REDACTED]\"",
+    "Values json can't encode (dates, sets, objects) are written as str(value)"
+  ],
+  "contract": "class JsonFormatter(logging.Formatter): def format(self, record: logging.LogRecord) -> str",
+  "expectedBehavior": "logger.info(\"order %s placed\", 42, extra={\"request_id\": \"r-1\"}) writes {\"time\": \"2026-11-12T10:00:00.123456+00:00\", \"level\": \"INFO\", \"logger\": \"shop\", \"message\": \"order 42 placed\", \"request_id\": \"r-1\"} on one line.",
+  "edgeCases": [
+    "A message containing a newline",
+    "logger.exception(...) inside an except block: traceback included, still one line",
+    "extra keys with mixed case like Authorization or api_token",
+    "A date or another non-JSON value in extra",
+    "Lazy %-style args must be applied (record.msg alone is the unformatted template)"
+  ],
+  "tests": [
+    "test_basic_fields_with_lazy_args",
+    "test_each_record_is_exactly_one_line",
+    "test_time_is_iso8601_in_utc",
+    "test_extra_fields_become_top_level_keys",
+    "test_sensitive_fields_are_redacted",
+    "test_exception_traceback_is_included_on_one_line",
+    "test_values_json_cannot_encode_become_strings"
+  ],
+  "hints": [
+    "Conceptual: extra= doesn't create a dict on the record; it sets attributes on the LogRecord. So the extra fields are exactly the record's attributes that a plain LogRecord doesn't have.",
+    "Specific: get the standard attribute names once by creating an empty LogRecord and looking at vars() of it (plus 'message' and 'asctime', which formatting adds). Use record.getMessage() for the text, self.formatException(record.exc_info) for the traceback, and json.dumps(..., default=str).",
+    "Implementation: STANDARD = set(vars(logging.LogRecord(\"\", 0, \"\", 0, \"\", None, None))) | {\"message\", \"asctime\"}; build a dict with the four fixed keys, add every (key, value) from vars(record) whose key isn't in STANDARD, add exc if record.exc_info, then replace sensitive keys' values, then return json.dumps(entry, default=str)."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "Redaction happens after all fields are collected, so it also covers extra fields",
+    "No print(); the formatter only returns the string and the handler writes it"
+  ]
+}

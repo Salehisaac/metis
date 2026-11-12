@@ -1,0 +1,46 @@
+{
+  "id": "WEB.M04.L03.E1",
+  "lesson": "WEB.M04.L03",
+  "title": "A parametrized status-code table that kills seven mutants",
+  "problem": "app.py is a correct messages API with three endpoints: send (POST), list (GET with ?limit=1..100) and delete (DELETE) messages. Write its status-code table: grow CASES in test_api.py with one row per request, covering normal, invalid, edge and error paths of every endpoint, and write test_store_unavailable_is_503 with a dependency override. test_meta.py runs your table and test against seven broken copies of app.py.",
+  "requirements": [
+    "Edit only test_api.py. Don't change app.py, conftest.py or test_meta.py",
+    "Keep the rows send-ok and list-ok; give every new row a readable id with pytest.param(..., id=...)",
+    "Rows are (method, url, json_body_or_None, expected_status) and must match the real app.py",
+    "Cover both sides of every boundary: limit and text length",
+    "test_store_unavailable_is_503 overrides get_store on client.app with a function that raises StoreUnavailable and asserts the 503 status and body",
+    "Derive rows from app.py first. Read the mutants in test_meta.py only after your first run"
+  ],
+  "contract": "test_api.py defines CASES: list of pytest.param(method, url, body, expected_status, id=...), test_status parametrized over CASES, and test_store_unavailable_is_503(client)",
+  "expectedBehavior": "pytest -q shows every test_status[...] row, test_store_unavailable_is_503 and all seven test_tests_kill[...] cases passing",
+  "edgeCases": [
+    "limit at 1 and 100 (valid) and at 0 and 101 (invalid)",
+    "text of exactly 500 characters (valid) and 501 (invalid)",
+    "A chat id that doesn't exist, on every endpoint",
+    "Deleting a message id that exists, but in another chat",
+    "The storage backend raising an exception"
+  ],
+  "tests": [
+    "test_status[send-ok]",
+    "test_status[list-ok]",
+    "test_store_unavailable_is_503",
+    "test_tests_kill[limit_zero_allowed]",
+    "test_tests_kill[limit_max_too_high]",
+    "test_tests_kill[text_too_long_allowed]",
+    "test_tests_kill[delete_returns_200]",
+    "test_tests_kill[delete_ignores_chat]",
+    "test_tests_kill[list_unknown_chat_200]",
+    "test_tests_kill[no_503_handler]"
+  ],
+  "hints": [
+    "Conceptual: go endpoint by endpoint and write the four kinds of path for each: normal, invalid, edge, error. Every number in app.py (ge=1, le=100, max_length=500, status_code=...) is a boundary that needs a row on each side.",
+    "Specific: the seeded data matters. Chat 1 has message 1 and chat 2 has none, so DELETE /chats/1/messages/1 is the 204 row, and DELETE /chats/2/messages/1 asks whether a message id from another chat is rejected. Don't forget an unknown chat id (9) for list and delete too.",
+    "Implementation: rows look like pytest.param(\"GET\", \"/chats/1/messages?limit=0\", None, 422, id=\"list-limit-0\") and pytest.param(\"POST\", \"/chats/1/messages\", {\"text\": \"x\" * 501}, 422, id=\"send-501-chars\"). For the 503 test, define a function that raises StoreUnavailable(), put it in client.app.dependency_overrides[get_store], then send any request and assert status and json()."
+  ],
+  "evaluation": [
+    "All tests pass, including the seven test_tests_kill cases",
+    "Each endpoint has normal, invalid, edge and error rows",
+    "Row ids say what the row checks",
+    "The 503 test uses dependency_overrides, not a change to app.py"
+  ]
+}

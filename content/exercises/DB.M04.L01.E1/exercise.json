@@ -1,0 +1,51 @@
+{
+  "id": "DB.M04.L01.E1",
+  "lesson": "DB.M04.L01",
+  "title": "Remove SQL injection from four admin lookups",
+  "problem": "search.py's four functions paste caller-supplied values into SQL with f-strings. An attacker can read other tables or bypass the WHERE, and harmless input like o'neil or a one-element id list crashes them. Rewrite each one: values go through placeholders; the sort column and direction, which can't be placeholders, come from an allow-list.",
+  "requirements": [
+    "Edit only search.py; keep the function signatures and return shapes",
+    "No caller-supplied value is ever put into SQL text: values travel as parameters",
+    "find_user and recent_messages use placeholders for every value, including LIMIT",
+    "list_users accepts only sort 'username' or 'joined' and direction 'asc' or 'desc'; anything else raises ValueError before any SQL runs",
+    "list_users 'joined' orders by created_at, then id, both in the requested direction",
+    "users_by_ids works for any number of ids, including one and zero (empty list without querying)",
+    "Don't escape quotes by hand anywhere"
+  ],
+  "contract": "find_user(conn, username) -> tuple | None; recent_messages(conn, chat_id, limit) -> list[tuple]; list_users(conn, sort='username', direction='asc') -> list[tuple]; users_by_ids(conn, ids) -> list[tuple]",
+  "expectedBehavior": "find_user(conn, \"x' OR '1'='1\") returns None; list_users(conn, 'joined', 'desc') returns users 4, 5, 3, 2, 1; list_users(conn, 'id') raises ValueError; users_by_ids(conn, [2]) returns [(2, 'ben')]",
+  "edgeCases": [
+    "A username containing a quote (o'neil)",
+    "Injection payloads in a string value, a numeric value, an ORDER BY column and a direction",
+    "users_by_ids with one id (str(tuple) gives '(2,)', invalid SQL) and with no ids",
+    "Unknown ids are simply missing from the result",
+    "Ties in created_at (ben and chen) are broken by id in the requested direction"
+  ],
+  "tests": [
+    "test_find_user",
+    "test_find_user_with_a_quote_in_the_name",
+    "test_find_user_injection_finds_nothing[or_true]",
+    "test_find_user_injection_finds_nothing[union]",
+    "test_recent_messages",
+    "test_recent_messages_injection_in_chat_id",
+    "test_list_users_by_username",
+    "test_list_users_by_join_date",
+    "test_list_users_rejects_anything_not_allowed[id_column]",
+    "test_list_users_rejects_anything_not_allowed[stacked_drop]",
+    "test_list_users_rejects_anything_not_allowed[bad_direction]",
+    "test_list_users_rejects_anything_not_allowed[direction_injection]",
+    "test_users_by_ids",
+    "test_users_by_one_id_and_by_none",
+    "test_users_by_ids_injection"
+  ],
+  "hints": [
+    "Conceptual: a placeholder can stand for a value, never for a column name or a keyword. So values become ? with a parameter tuple, and the ORDER BY part must be chosen from SQL text you wrote yourself, picked by the caller's input but never containing it.",
+    "Specific: for list_users, a dict from allowed sort names to fixed ORDER BY text, and one from 'asc'/'desc' to 'ASC'/'DESC'; check membership first and raise ValueError otherwise. For users_by_ids, build the string '?, ?, ?' with one ? per id and pass the ids list as the parameters.",
+    "Implementation: conn.execute(\"... WHERE username = ?\", (username,)). For the IN list: marks = \", \".join(\"?\" * len(ids)); then f\"... WHERE id IN ({marks}) ...\" is safe because marks contains only question marks. Return [] early when ids is empty."
+  ],
+  "evaluation": [
+    "All fifteen tests pass",
+    "No f-string or + puts a caller's value into SQL; the only dynamic SQL text is allow-listed or a run of ? marks",
+    "Invalid sort input is rejected with ValueError, not passed to the database"
+  ]
+}

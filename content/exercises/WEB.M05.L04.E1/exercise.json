@@ -1,0 +1,44 @@
+{
+  "id": "WEB.M05.L04.E1",
+  "lesson": "WEB.M05.L04",
+  "title": "Failure-path tests that prove the rollback and catch leaks",
+  "problem": "app.py sends a message as one unit of work: the message row, the chat's message_count and an audit entry are committed together. It's correct. Write four tests in test_failures.py that prove it: the normal path, a duplicate client_id (409), an audit-log outage (503 with nothing saved) and a leak check. test_meta.py runs your tests against five broken copies of app.py.",
+  "requirements": [
+    "Edit only test_failures.py. Don't change app.py, conftest.py or test_meta.py",
+    "Keep the four test names. Tests may use the fixtures client, db, engine and connections",
+    "Check database state through db (a separate session), not through the response alone",
+    "Simulate the audit outage with app.dependency_overrides on client.app, not by editing app.py",
+    "All your tests pass on the real app.py",
+    "Write the tests from the docstrings and app.py first. Read the mutants only after your first run"
+  ],
+  "contract": "test_failures.py defines test_send_saves_message_count_and_audit, test_duplicate_client_id_is_409_and_changes_nothing, test_audit_failure_rolls_back_everything and test_no_connection_is_held_after_requests",
+  "expectedBehavior": "pytest -q shows your four tests and all five test_tests_kill[...] cases passing",
+  "edgeCases": [
+    "A failure after the first write of the unit of work",
+    "A unique-constraint violation detected only at commit",
+    "Requests that end in 404 or 409, not just successful ones, for the leak check",
+    "Objects cached in the db session hiding what is really in the database"
+  ],
+  "tests": [
+    "test_send_saves_message_count_and_audit",
+    "test_duplicate_client_id_is_409_and_changes_nothing",
+    "test_audit_failure_rolls_back_everything",
+    "test_no_connection_is_held_after_requests",
+    "test_tests_kill[commit_per_step]",
+    "test_tests_kill[conflict_is_500]",
+    "test_tests_kill[session_leak]",
+    "test_tests_kill[commit_after_yield]",
+    "test_tests_kill[count_not_updated]"
+  ],
+  "hints": [
+    "Conceptual: 'nothing was saved' can only be shown by reading the database after the request, through a different session from the app's. Count every table the unit of work touches, plus message_count, before and after.",
+    "Specific: write a small helper that returns the message count, the audit count and chat 1's message_count from db. Call db.expire_all() at its start so the session doesn't answer from cached objects. For the outage, make a class whose record() raises AuditUnavailable and put it in client.app.dependency_overrides[get_audit]: FastAPI calls the override, and calling a class makes an instance.",
+    "Implementation: the duplicate test sends the same client_id twice, takes the snapshot after the first request, and asserts 409 and an unchanged snapshot after the second. The leak test sends a valid message, one to chat 99 (404) and a duplicate (409), then asserts connections.checkouts > 0 and connections.checked_out() == 0."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "Every failure-path test asserts the status AND the database state",
+    "The outage is simulated with a dependency override",
+    "You can say which test kills each mutant, and why commit_after_yield is only visible on the duplicate path"
+  ]
+}

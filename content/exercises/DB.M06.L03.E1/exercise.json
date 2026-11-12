@@ -1,0 +1,36 @@
+{
+  "id": "DB.M06.L03.E1",
+  "lesson": "DB.M06.L03",
+  "title": "Fix the lost update in the unread counters",
+  "problem": "increment_unread() and fan_out_unread() pass every single-user test, but under concurrent requests the counters come out too low. Find the read-modify-write pattern and fix both functions so no update can be lost, without changing their behaviour or signatures.",
+  "requirements": [
+    "increment_unread adds exactly 1 and raises LookupError for a non-member, as before",
+    "fan_out_unread adds 1 for every member except the sender and returns how many rows changed (0 for an unknown chat)",
+    "Each function sends exactly one SQL statement (an UPDATE) besides transaction control",
+    "Both functions commit their change",
+    "Four threads with their own connections must not lose any increment"
+  ],
+  "contract": "increment_unread(conn, chat_id, user_id) -> None; fan_out_unread(conn, chat_id, sender_id) -> int",
+  "expectedBehavior": "After 4 threads x 50 rounds of increment_unread(1, 20) and fan_out_unread(1, 10), user 20 has 400 unread and user 30 has 200",
+  "edgeCases": ["Non-member", "Unknown chat", "The sender must not get an unread increment", "Concurrent connections"],
+  "tests": [
+    "test_increment_adds_one",
+    "test_increment_non_member_raises",
+    "test_increment_is_one_update_statement",
+    "test_increment_commits",
+    "test_fan_out_skips_sender",
+    "test_fan_out_unknown_chat_updates_nothing",
+    "test_fan_out_is_one_update_statement",
+    "test_no_lost_updates_under_concurrency"
+  ],
+  "hints": [
+    "Conceptual: the bug is the gap between reading the count into Python and writing count + 1 back. Let the database compute the new value from the current one in a single statement.",
+    "Specific: SET col = col + 1 in the UPDATE itself. Without the SELECT, how do you know whether a member existed? Look at what the cursor tells you after an UPDATE (sqlite3 docs, Cursor.rowcount).",
+    "Implementation: cur = conn.execute('UPDATE chat_members SET unread_count = unread_count + 1 WHERE ...', params); conn.commit(); then use cur.rowcount. For the fan-out, put the 'not the sender' condition into the WHERE clause."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "No SELECT before the UPDATE in either function",
+    "You can explain why the starter loses updates even though SQLite is serializable"
+  ]
+}

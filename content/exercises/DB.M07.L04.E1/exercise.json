@@ -1,0 +1,33 @@
+{
+  "id": "DB.M07.L04.E1",
+  "lesson": "DB.M07.L04",
+  "title": "Kill the N+1 in the chat list screen",
+  "problem": "Both functions in previews.py return correct results, but they lazy-load a relationship inside a loop: one extra SELECT per chat, and one per message sender. Change how the relationships are loaded so each function sends at most two SELECT statements, whatever the number of chats or messages.",
+  "requirements": [
+    "Return exactly the same data as before (the content tests already pass; keep them passing)",
+    "chat_member_lists sends at most 2 SELECT statements for any number of chats",
+    "latest_with_senders sends at most 2 SELECT statements for any number of messages",
+    "Use relationship loader options on the query; don't change models.py"
+  ],
+  "contract": "chat_member_lists(session) -> list[tuple[str, list[str]]]; latest_with_senders(session, chat_id, limit=10) -> list[tuple[str, str]]",
+  "expectedBehavior": "With 30 chats, chat_member_lists returns 30 entries using 1-2 SELECTs instead of 31",
+  "edgeCases": ["A chat with no members", "An unknown chat id", "Many distinct senders"],
+  "tests": [
+    "test_member_lists_content",
+    "test_member_lists_chat_without_members",
+    "test_member_lists_use_at_most_two_queries",
+    "test_latest_with_senders_content",
+    "test_latest_with_senders_unknown_chat",
+    "test_latest_with_senders_uses_at_most_two_queries"
+  ],
+  "hints": [
+    "Conceptual: the loops aren't the problem; lazy loading is. Each first access to chat.members or message.sender runs a SELECT. Tell the query up front which relationships you'll need.",
+    "Specific: .options(...) on the select() takes loader options. One kind loads a collection for all parents with a single extra IN query; another adds a JOIN for a many-to-one.",
+    "Implementation: select(Chat).options(selectinload(Chat.members)).order_by(Chat.title), and select(Message).options(joinedload(Message.sender)) with the same where/order_by/limit as before."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "Results computed exactly as before; only loader options added",
+    "You can say why selectinload suits a collection and joinedload a many-to-one"
+  ]
+}

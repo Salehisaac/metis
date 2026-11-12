@@ -1,0 +1,48 @@
+{
+  "id": "ARCH.M04.L02.E1",
+  "lesson": "ARCH.M04.L02",
+  "title": "Implement booking from the design",
+  "problem": "Implement the core of the room-booking design from this lesson: book() enforces the 'no overlapping confirmed bookings per room' invariant inside one write transaction and makes retries safe with an idempotency key; cancel() frees a slot. The schema and the rules are given; the edge cases are where the marks are.",
+  "requirements": [
+    "Validate before touching the database: start < end, length at most MAX_LENGTH, both on SLOT (15-minute) boundaries; otherwise ValueError",
+    "Start the transaction with conn.execute(\"BEGIN IMMEDIATE\") and do every check and the insert inside it",
+    "Same idempotency key and same room/member/start/end: return the existing booking unchanged; same key with any difference: IdempotencyMismatch",
+    "Unknown room: RoomNotFound. Overlap with a confirmed booking in the same room: BookingConflict. Intervals are half-open, so touching bookings don't overlap",
+    "Commit on success; on any error roll back so the write lock is released",
+    "cancel sets status 'cancelled' (idempotent) and raises KeyError for an unknown id"
+  ],
+  "contract": "book(conn, room_id: int, member: str, start: int, end: int, key: str) -> {\"id\", \"room_id\", \"member\", \"start\", \"end\", \"status\"}\ncancel(conn, booking_id: int) -> None",
+  "expectedBehavior": "book(conn, 1, 'ana', 9:00, 10:00, 'k1') returns a confirmed booking; book(conn, 1, 'bo', 9:30, 11:00, 'k2') raises BookingConflict; book(conn, 1, 'bo', 10:00, 11:00, 'k3') succeeds; repeating the first call with 'k1' returns the same booking without a second row.",
+  "edgeCases": [
+    "Touching intervals ([9,10) and [10,11)) are allowed; containing, contained and partial overlaps are not",
+    "Cancelled bookings and bookings in other rooms never block",
+    "Exactly 4 hours is allowed; 4 h 15 min is not; zero length and reversed ranges are not",
+    "Times not on a 15-minute boundary (even by 1 second)",
+    "A retried request whose original would now 'conflict' with itself must return the original",
+    "After a rejected booking, no transaction (and no write lock) is left open"
+  ],
+  "tests": [
+    "test_book_returns_the_booking",
+    "test_overlap_is_rejected",
+    "test_touching_bookings_are_allowed",
+    "test_other_rooms_and_cancelled_bookings_dont_block",
+    "test_validation",
+    "test_unknown_room",
+    "test_retry_with_same_key_returns_same_booking",
+    "test_same_key_different_request_is_rejected",
+    "test_check_and_insert_run_in_an_immediate_transaction",
+    "test_failed_booking_leaves_no_open_transaction",
+    "test_cancel_unknown_booking"
+  ],
+  "hints": [
+    "Conceptual: the invariant 'no overlaps' is only safe if nobody can insert between your check and your insert. In SQLite, BEGIN IMMEDIATE takes the write lock up front, so the check and the insert become one serialized step. The idempotency check comes first, because a retry of a successful booking would otherwise be rejected as a conflict with itself.",
+    "Specific: two half-open intervals [s1, e1) and [s2, e2) overlap exactly when s1 < e2 and s2 < e1. Put that in the WHERE clause, together with room_id and status = 'confirmed'. After conn.execute('BEGIN IMMEDIATE'), a `with conn:` block commits on return and rolls back on an exception.",
+    "Implementation: validate; conn.execute('BEGIN IMMEDIATE'); with conn: look up the key (return or raise IdempotencyMismatch), check the room exists, run SELECT id FROM bookings WHERE room_id = ? AND status = 'confirmed' AND start_ts < ? AND ? < end_ts with (room_id, end, start), raise on a row, then INSERT and return the dict built from cursor.lastrowid."
+  ],
+  "evaluation": [
+    "All 11 tests pass",
+    "The overlap rule is one SQL predicate with half-open semantics",
+    "Validation errors never open a transaction; every other error rolls back",
+    "Idempotency is checked before the conflict check"
+  ]
+}

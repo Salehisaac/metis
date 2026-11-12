@@ -1,0 +1,47 @@
+{
+  "id": "PY.M04.L03.E1",
+  "lesson": "PY.M04.L03",
+  "title": "Stop swallowing errors in a score loader",
+  "problem": "scores.py loads 'name,score' lines. Its bare `except:` turns every problem into None: malformed lines vanish without being counted, error messages are lost, and real bugs (like a None in the list) are hidden too. It's the Python version of `authors, _ := ...`. Rewrite parse_record() and load_scores() so that malformed lines raise a precise BadRecord, load_scores() skips and counts them, and every other error propagates.",
+  "requirements": [
+    "parse_record(line, lineno) returns (name, score), with the name stripped and the score an int (int() rules, so surrounding spaces are fine)",
+    "Not exactly one comma, or an empty/blank name: raise BadRecord(\"line <lineno>: expected 'name,score', got <line repr>\")",
+    "A score that int() rejects: raise BadRecord(\"line <lineno>: bad score <stripped score repr>\") chained with `from` to the ValueError",
+    "load_scores(lines) ignores blank or whitespace-only lines (not counted), skips and counts lines that raise BadRecord, and returns (scores_dict, skipped_count)",
+    "Catch only BadRecord in load_scores, and only ValueError around int() in parse_record. No bare except, no `except Exception`",
+    "Don't change BadRecord or the tests"
+  ],
+  "contract": "parse_record(line: str, lineno: int) -> tuple[str, int] (raises BadRecord); load_scores(lines: list[str]) -> tuple[dict[str, int], int]",
+  "expectedBehavior": "parse_record('ada,42', 1) == ('ada', 42); parse_record('ada 42', 3) raises BadRecord(\"line 3: expected 'name,score', got 'ada 42'\"); load_scores(['ada,3', 'oops', 'bob,5', 'c,d']) == ({'ada': 3, 'bob': 5}, 2); load_scores(['ada,3', None]) raises AttributeError",
+  "edgeCases": [
+    "Empty input list",
+    "Blank and whitespace-only lines (ignored, not counted)",
+    "Missing comma and too many commas",
+    "A blank name before the comma",
+    "A non-numeric score (must keep the original error as __cause__)",
+    "A value that isn't a string at all: a caller bug, so it must not be counted as a bad record"
+  ],
+  "tests": [
+    "test_valid_record",
+    "test_spaces_around_fields",
+    "test_missing_comma",
+    "test_too_many_commas",
+    "test_empty_name",
+    "test_bad_score_keeps_the_cause",
+    "test_load_counts_skipped_lines",
+    "test_load_ignores_blank_lines",
+    "test_load_empty_input",
+    "test_bugs_are_not_swallowed"
+  ],
+  "hints": [
+    "Conceptual: split the work. parse_record decides whether one line is valid and raises a precise error if not. load_scores decides the policy: skip and count. Each function catches only the error it expects and lets everything else through.",
+    "Specific: check the shape with split(',') and len() before unpacking (you need the original line for the message). Wrap only int(score) in try/except ValueError. In load_scores, skip blank lines before calling parse_record, and use try/except BadRecord/else.",
+    "Implementation: parts = line.split(','); if len(parts) != 2 or the stripped name is empty, raise BadRecord(...). Then try: int(score) / except ValueError as err: raise BadRecord(...) from err. In the loop: if not line.strip(): continue; try: name, score = parse_record(line, lineno) / except BadRecord: skipped += 1 / else: scores[name] = score."
+  ],
+  "evaluation": [
+    "All 10 tests pass",
+    "No bare except and no `except Exception` anywhere",
+    "The try blocks contain only the code whose error they handle",
+    "The message includes the line number and the offending text"
+  ]
+}

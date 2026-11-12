@@ -1,0 +1,39 @@
+{
+  "id": "OPS.M01.L02.E1",
+  "lesson": "OPS.M01.L02",
+  "title": "Cache-friendly, healthy image with a .dockerignore",
+  "problem": "The Dockerfile from last lesson's style works, but every code change reinstalls all dependencies, the build context includes everything (including any .env file), and Docker can't tell whether the app is healthy. Reorder it for the build cache, add a HEALTHCHECK against GET /health, and write the .dockerignore.",
+  "requirements": [
+    "COPY requirements.txt on its own, then RUN pip install -r with it, and only then COPY the application source",
+    "Every pip install uses --no-cache-dir",
+    "The final stage has a HEALTHCHECK whose CMD is in exec form and requests http://localhost:8000/health",
+    "Don't rely on curl or wget unless the Dockerfile installs them; Python's urllib is already in the image",
+    ".dockerignore excludes .git, .venv, __pycache__ and .env, and doesn't exclude requirements.txt, app or the Dockerfile",
+    "Keep the non-root USER and exec-form CMD from lesson 1"
+  ],
+  "contract": "Two files in this folder: Dockerfile and .dockerignore. The app is app/main.py (app = FastAPI()) with GET /health returning 200; requirements.txt sits next to the Dockerfile.",
+  "expectedBehavior": "All five tests pass. With Docker, editing app/main.py and rebuilding would reuse the pip install layer, and the container's health status would become healthy once /health answers.",
+  "edgeCases": [
+    "COPY . . before pip install invalidates the install layer on every source change",
+    "A HEALTHCHECK in shell form or pointing at the wrong port",
+    "urlopen raises on connection errors and on 4xx/5xx statuses, which makes python exit with 1 (unhealthy)",
+    "A .dockerignore pattern like * or *.txt that hides files the build needs"
+  ],
+  "tests": [
+    "test_dependencies_install_before_the_source_is_copied",
+    "test_pip_install_keeps_no_download_cache",
+    "test_healthcheck_probes_the_health_endpoint",
+    "test_dockerignore_keeps_junk_and_secrets_out",
+    "test_last_lessons_rules_still_hold"
+  ],
+  "hints": [
+    "Conceptual: a changed layer invalidates every layer after it, so put what changes rarely (dependencies) above what changes on every commit (your code). A health check is just a command whose exit code says healthy (0) or unhealthy (1).",
+    "Specific: split `COPY . .` into two COPY lines around the pip install. For the probe, `python -c` with urllib.request.urlopen exits 1 when the request fails, which is exactly what HEALTHCHECK wants.",
+    "Implementation: COPY requirements.txt /app/ ; RUN pip install --no-cache-dir -r /app/requirements.txt ; COPY app/ /app/app/ ; HEALTHCHECK --interval=... CMD [\"python\", \"-c\", \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)\"]. In .dockerignore: one name per line."
+  ],
+  "evaluation": [
+    "All five tests pass",
+    "HEALTHCHECK has a timeout shorter than its interval",
+    "The .dockerignore is commented by group, like a .gitignore"
+  ]
+}

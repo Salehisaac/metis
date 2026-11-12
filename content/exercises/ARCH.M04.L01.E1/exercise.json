@@ -1,0 +1,41 @@
+{
+  "id": "ARCH.M04.L01.E1",
+  "lesson": "ARCH.M04.L01",
+  "title": "Back-of-the-envelope estimate helpers",
+  "problem": "A design doc's numbers section answers 'how big is this?' before anyone picks Redis or Kafka. Write four small helpers that turn requirements into numbers: requests per second, storage, human-readable sizes, and whether reads need a cache. Read each docstring carefully: the rounding and the boundaries are part of the spec.",
+  "requirements": [
+    "rps: average = requests_per_day / 86400 and peak = average * peak_factor, each rounded up with math.ceil; ValueError for negative traffic or peak_factor < 1",
+    "storage_bytes: rows * bytes * days * overhead, rounded up; ValueError for negative arguments or overhead < 1",
+    "human_bytes: 'N B' below 1000, otherwise one decimal in KB/MB/GB/TB (powers of 1000), never beyond TB",
+    "needs_cache: True only when peak reads are strictly above db capacity * headroom"
+  ],
+  "contract": "rps(requests_per_day: int, peak_factor: float) -> tuple[int, int]\nstorage_bytes(rows_per_day: int, bytes_per_row: int, days: int, overhead: float = 1.0) -> int\nhuman_bytes(n: int) -> str\nneeds_cache(peak_read_rps: float, db_read_capacity_rps: float, headroom: float = 0.5) -> bool",
+  "expectedBehavior": "rps(100_000, 10) == (2, 12); storage_bytes(3_000, 200, 1095) == 657_000_000; human_bytes(657_000_000) == '657.0 MB'; needs_cache(12, 2000) is False.",
+  "edgeCases": [
+    "Tiny traffic (1 request/day) rounds up to 1 rps, zero stays 0",
+    "Exact values aren't rounded up further (86,400/day is exactly 1 rps)",
+    "Unit boundaries: 999 B, 1000 -> 1.0 KB, 1,000,000 -> 1.0 MB",
+    "Beyond TB stays in TB (5000.0 TB)",
+    "Peak exactly at the headroom limit doesn't need a cache"
+  ],
+  "tests": [
+    "test_rps_rounds_up",
+    "test_rps_small_and_zero_traffic",
+    "test_rps_rejects_bad_input",
+    "test_storage_bytes",
+    "test_storage_bytes_rejects_bad_input",
+    "test_human_bytes_units",
+    "test_human_bytes_boundaries",
+    "test_needs_cache"
+  ],
+  "hints": [
+    "Conceptual: estimates are deliberately pessimistic, so round up, never down. And a boundary rule like 'strictly above' or 'largest unit whose value is >= 1' has to be read literally: write the boundary cases down before you code.",
+    "Specific: math.ceil(x) rounds up and leaves whole numbers alone. For human_bytes, start with n / 1000 and keep dividing by 1000 while the value is still >= 1000 and there's a bigger unit left. Format with f'{value:.1f} {unit}'.",
+    "Implementation: validate first and raise ValueError. rps: avg = requests_per_day / SECONDS_PER_DAY; return math.ceil(avg), math.ceil(avg * peak_factor). needs_cache is one comparison: peak_read_rps > db_read_capacity_rps * headroom."
+  ],
+  "evaluation": [
+    "All 8 tests pass",
+    "Validation happens before any arithmetic",
+    "No unit beyond TB, and no float formatting for plain bytes"
+  ]
+}

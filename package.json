@@ -1,0 +1,19 @@
+{
+  "name": "metis",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only tooling. The site itself has no build step; vendored browser libraries are copied to site/vendor by `npm run vendor`.",
+  "scripts": {
+    "vendor": "node tools/vendor.mjs",
+    "test:js": "node --test tests/js/",
+    "test:browser": "node tests/browser/check.mjs && node tests/browser/engine.mjs && node tests/browser/progress.mjs && node tests/browser/mentor.mjs && node tests/browser/content.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/barlow": "5.3.0",
+    "@fontsource/barlow-condensed": "5.3.0",
+    "@highlightjs/cdn-assets": "11.12.0",
+    "dompurify": "3.4.17",
+    "marked": "18.1.2",
+    "playwright-core": "1.64.1"
+  }
+}

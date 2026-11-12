@@ -1,0 +1,42 @@
+{
+  "id": "DB.M07.L02.E1",
+  "lesson": "DB.M07.L02",
+  "title": "create_group and add_member: one transaction per use case",
+  "problem": "Write two use cases with the SQLAlchemy ORM. create_group creates a chat with its members, all or nothing. add_member adds one user to an existing chat and reports whether anything changed. Each function opens and commits its own transaction from the session factory it receives.",
+  "requirements": [
+    "Each function uses one transaction from session_factory, committed on success and rolled back on any error",
+    "create_group: unknown usernames raise LookupError naming them, and nothing is saved",
+    "create_group: a blank or whitespace-only title raises ValueError, and nothing is saved",
+    "create_group: the creator and members are added once each, even if repeated; return the new chat id",
+    "add_member: True if added, False if already a member; LookupError for an unknown chat or user"
+  ],
+  "contract": "create_group(session_factory, title, creator, members) -> int; add_member(session_factory, chat_id, username) -> bool",
+  "expectedBehavior": "create_group(factory, 'backend', 'ali', ['sara', 'omid']) returns an id whose members are ali, omid and sara; create_group(factory, 'x', 'ali', ['ghost']) raises LookupError and leaves no chat behind",
+  "edgeCases": [
+    "Unknown creator or member",
+    "Whitespace-only title",
+    "Duplicates, including the creator in members",
+    "Creator with no other members",
+    "Adding an existing member"
+  ],
+  "tests": [
+    "test_create_group_returns_id_and_saves_members",
+    "test_creator_alone",
+    "test_duplicates_are_added_once",
+    "test_unknown_member_saves_nothing",
+    "test_unknown_creator_saves_nothing",
+    "test_blank_title_saves_nothing",
+    "test_add_member_then_again",
+    "test_add_member_unknown_chat_or_user"
+  ],
+  "hints": [
+    "Conceptual: put the whole use case inside `with session_factory.begin() as session:`. An exception raised inside the block rolls back everything, so validate and raise freely.",
+    "Specific: load all users with one select(User).where(User.username.in_(names)) and compare with the names you asked for. You need the chat's id before creating ChatMember rows; session.flush() sends the INSERT without committing.",
+    "Implementation: dedupe with list(dict.fromkeys([creator, *members])); after session.add(chat) and session.flush(), add one ChatMember(chat_id=chat.id, user_id=...) per user and return chat.id inside the with block. For add_member, session.get(ChatMember, (chat_id, user_id)) checks membership."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "No commit() or rollback() calls scattered through the code: the begin() block owns the transaction",
+    "One query for all usernames, not one per name"
+  ]
+}

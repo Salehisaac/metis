@@ -1,0 +1,40 @@
+{
+  "id": "AS.M01.L02.E1",
+  "lesson": "AS.M01.L02",
+  "title": "Stop hogging the event loop",
+  "problem": "sync_jobs.py has two async functions that never let other tasks run. pull_pages waits for the network with time.sleep, so two concurrent downloads run one after the other. checksum loops over many rows with no await, so nothing else runs until it finishes. Make both cooperate with the event loop, keep their results the same, and make checksum validate its `every` argument.",
+  "requirements": [
+    "pull_pages appends f\"{name}{i}\" to log before each page and waits about 0.01 s per page without blocking the loop",
+    "checksum returns the same total as before (sum of the UTF-8 bytes of all rows) and appends \"checksum done\" at the end",
+    "checksum lets other tasks run after every `every` rows",
+    "checksum raises ValueError when every < 1",
+    "Both functions stay async def; no threads"
+  ],
+  "contract": "async def pull_pages(name: str, pages: int, log: list[str]) -> None\nasync def checksum(rows: list[str], log: list[str], every: int = 100) -> int",
+  "expectedBehavior": "Two pull_pages tasks started together interleave: b0 is logged before a1. While checksum processes 1000 rows with every=100, a ticker task gets to run at least 5 times before \"checksum done\".",
+  "edgeCases": [
+    "pages == 0: nothing is logged",
+    "Empty rows: total 0, \"checksum done\" still logged",
+    "every that doesn't divide len(rows) (e.g. 7): the total is still exact",
+    "every == 0 or negative: ValueError"
+  ],
+  "tests": [
+    "test_pulls_interleave",
+    "test_pull_zero_pages",
+    "test_checksum_lets_others_run",
+    "test_checksum_value_unchanged",
+    "test_checksum_empty_rows",
+    "test_checksum_rejects_bad_every"
+  ],
+  "hints": [
+    "Conceptual: the loop can only switch tasks when the running task suspends at an await. time.sleep suspends the whole thread; a loop with no await never gives control back.",
+    "Specific: pull_pages needs the asyncio version of sleep. checksum needs an `await asyncio.sleep(0)` inside its loop, but only every `every` rows, plus a check of `every` before the loop.",
+    "Implementation: in checksum, loop with `for n, row in enumerate(rows, start=1):`, add the row's bytes, and when `n % every == 0` await asyncio.sleep(0). Raise ValueError at the top if every < 1."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "No time.sleep left in async code",
+    "checksum yields at a fixed interval rather than on every row (yielding costs something too)",
+    "The ValueError check happens before any work"
+  ]
+}

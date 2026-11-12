@@ -1,0 +1,48 @@
+{
+  "id": "WEB.M01.L02.E1",
+  "lesson": "WEB.M01.L02",
+  "title": "A chats resource with correct methods and status codes",
+  "problem": "chats_api.py has the app, a ChatIn body model and an in-memory store, but no routes. Add create, read, rename (PUT) and delete for chats, with the status codes, headers and error bodies below. Chat titles are unique, ignoring case.",
+  "requirements": [
+    "POST /chats with {\"title\": str} creates {\"id\": int, \"title\": str}: 201, Location: /chats/{id}, the chat as the body. Ids come from _ids and start at 1",
+    "GET /chats/{chat_id}: 200 and the chat, or 404 {\"detail\": \"chat not found\"}",
+    "PUT /chats/{chat_id} with {\"title\": str}: 200 and the updated chat; 404 as above if it doesn't exist",
+    "DELETE /chats/{chat_id}: 204 with an empty body; 404 as above if it doesn't exist",
+    "A title already used by another chat, compared case-insensitively, is 409 {\"detail\": \"chat title already taken\"} on POST and PUT",
+    "A body without title is 422 (FastAPI does this for you)"
+  ],
+  "contract": "POST /chats -> 201 + Location | 409 | 422; GET /chats/{id} -> 200 | 404; PUT /chats/{id} -> 200 | 404 | 409; DELETE /chats/{id} -> 204 | 404",
+  "expectedBehavior": "POST {\"title\": \"Family\"} -> 201, Location /chats/1, {\"id\": 1, \"title\": \"Family\"}; POST {\"title\": \"family\"} -> 409; DELETE /chats/1 -> 204 b''; DELETE /chats/1 again -> 404",
+  "edgeCases": [
+    "Renaming a chat to its own title (even with different case) is 200, not 409: PUT must stay idempotent",
+    "A rejected rename leaves the chat unchanged",
+    "\"backend TEAM\" conflicts with \"Backend team\"",
+    "After DELETE, the title is free again but the id is not reused",
+    "Second DELETE of the same chat is 404",
+    "A 204 response has no body at all"
+  ],
+  "tests": [
+    "test_create_returns_201_location_and_chat",
+    "test_duplicate_title_is_409_case_insensitive",
+    "test_missing_title_is_422",
+    "test_read_existing_and_missing",
+    "test_put_renames",
+    "test_put_same_title_twice_is_idempotent",
+    "test_put_to_another_chats_title_is_409",
+    "test_put_missing_chat_is_404",
+    "test_delete_is_204_then_404",
+    "test_ids_are_not_reused_and_titles_free_up"
+  ],
+  "hints": [
+    "Conceptual: four routes share two checks, 'does this chat exist?' (404) and 'does another chat have this title?' (409). Write each check once and call it from the routes.",
+    "Specific: success codes go in the decorator (status_code=201, 204); Location goes on a `response: Response` parameter; errors are raised, never returned. For PUT, the title check must ignore the chat being renamed.",
+    "Implementation: a helper that raises HTTPException(404, ...) or returns chats[chat_id], and a helper ensure_title_free(title, except_id=None) that loops over chats.values() and compares title.casefold() for every chat whose id != except_id."
+  ],
+  "evaluation": [
+    "All ten tests pass",
+    "HTTPException is raised, never returned",
+    "Status codes come from the decorator or HTTPException, not from building responses by hand",
+    "The 404 and 409 checks are not copy-pasted into every route",
+    "PUT validates before it mutates"
+  ]
+}

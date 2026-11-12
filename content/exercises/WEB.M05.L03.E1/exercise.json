@@ -1,0 +1,39 @@
+{
+  "id": "WEB.M05.L03.E1",
+  "lesson": "WEB.M05.L03",
+  "title": "Point the tests at an in-memory test database",
+  "problem": "The tests in test_messages.py use the production app, whose database file lives on a server path that doesn't exist here (as on a CI runner), so every request fails with 'unable to open database file'. Write the three fixtures in conftest.py: a fresh in-memory SQLite engine per test with the tables created, a Session for arranging and checking data, and a client for an app built on the test engine.",
+  "requirements": [
+    "Edit only conftest.py. Don't change app.py or test_messages.py",
+    "engine: a new in-memory SQLite engine per test that works across threads (StaticPool and check_same_thread=False), with Base.metadata.create_all run on it, disposed after the test",
+    "db: a Session bound to the test engine, closed after the test",
+    "client: a TestClient (used as a context manager) for create_app(engine); never the module-level production app",
+    "No test may touch production_engine"
+  ],
+  "contract": "conftest.py defines fixtures engine() -> Engine, db(engine) -> Session and client(engine) -> TestClient",
+  "expectedBehavior": "pytest -q shows 6 passed; every test starts with empty tables; rows the app commits are visible through db",
+  "edgeCases": [
+    "A test that runs after another test inserted rows",
+    "Data arranged through db and then read by the app in another thread",
+    "A test that uses db without client"
+  ],
+  "tests": [
+    "test_send_message_is_saved",
+    "test_send_to_unknown_chat_is_404",
+    "test_unknown_sender_is_404",
+    "test_list_messages_in_order",
+    "test_database_starts_empty",
+    "test_engine_is_in_memory_with_one_shared_connection"
+  ],
+  "hints": [
+    "Conceptual: an in-memory SQLite database exists only inside one connection. A second connection, for example one opened by another thread, sees a different, empty database. So the engine must hand out the same single connection every time, and that connection must be allowed to cross threads.",
+    "Specific: create_engine(\"sqlite://\", connect_args={\"check_same_thread\": False}, poolclass=StaticPool). Then create the tables on it. Build the app with create_app(engine) instead of importing app. Each fixture that opens something yields it and cleans up after the yield.",
+    "Implementation: engine creates the engine, calls Base.metadata.create_all(...), yields it and disposes it afterwards. db is `with Session(engine) as session:` with a yield inside. client is `with TestClient(create_app(engine)) as c:` with a yield inside. Import Base and create_app from app, and StaticPool from sqlalchemy.pool."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "A new engine and new tables for each test (function scope)",
+    "Every fixture cleans up after yield",
+    "You can explain both failure modes: 'no such table' without StaticPool, and the thread error without check_same_thread=False"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "PY.M04.L02.E1",
+  "lesson": "PY.M04.L02",
+  "title": "Translate a Go ParsePort to exceptions",
+  "problem": "port.py contains a Go function that returns (int, error). Write the Python version: parse_port() returns the port number on success and raises a custom PortError on failure. Keep the original int() error attached as the cause, the way %w wraps an error in Go.",
+  "requirements": [
+    "Define `class PortError(ValueError)` in port.py, so callers that catch ValueError still catch it",
+    "parse_port(text) returns an int from 1 to 65535",
+    "What counts as a number follows int(): surrounding whitespace is fine (' 443\\n' is 443)",
+    "Not a number: raise PortError(\"invalid port <text repr>\") chained to the original ValueError with `from`. For example: invalid port 'http'",
+    "A number outside 1–65535: raise PortError(\"port <n> out of range 1-65535\"), with no cause. For example: port 0 out of range 1-65535",
+    "No print(), no return of None or -1 for errors"
+  ],
+  "contract": "class PortError(ValueError); parse_port(text: str) -> int, raises PortError",
+  "expectedBehavior": "parse_port('8080') == 8080; parse_port(' 443\\n') == 443; parse_port('http') raises PortError(\"invalid port 'http'\") whose __cause__ is the ValueError from int(); parse_port('0') raises PortError('port 0 out of range 1-65535')",
+  "edgeCases": [
+    "Empty string",
+    "The limits 1 and 65535 are valid; 0 and 65536 are not",
+    "Negative numbers are numbers, so they get the out-of-range message",
+    "Surrounding whitespace and newlines"
+  ],
+  "tests": [
+    "test_plain_number",
+    "test_surrounding_whitespace_is_ignored",
+    "test_limits_are_valid",
+    "test_not_a_number",
+    "test_empty_string",
+    "test_not_a_number_keeps_the_cause",
+    "test_zero_is_out_of_range",
+    "test_too_big",
+    "test_negative",
+    "test_range_error_has_no_cause",
+    "test_callers_can_catch_value_error"
+  ],
+  "hints": [
+    "Conceptual: there are two different failures. One comes from int() (you catch it and re-raise your own error, chained), and one is your own rule (you raise it directly). Go's `if err != nil { return ..., fmt.Errorf(\"...: %w\", err) }` becomes `except ... as err: raise ... from err`.",
+    "Specific: the class body can be just `pass`. Put only the int() call inside try, and do the range check after it. The message uses {text!r} for the quoted form ('http'), and a chained comparison 1 <= n <= 65535 works in Python.",
+    "Implementation: try: n = int(text) / except ValueError as err: raise PortError(f\"invalid port {text!r}\") from err. Then: if the number isn't between 1 and 65535, raise PortError with the range message. Otherwise return it."
+  ],
+  "evaluation": [
+    "All 11 tests pass",
+    "The try block contains only the call that can fail (int)",
+    "The range error is raised directly, not from inside an except block"
+  ]
+}

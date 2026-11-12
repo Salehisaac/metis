@@ -1,0 +1,45 @@
+{
+  "id": "PY.M03.L02.E1",
+  "lesson": "PY.M03.L02",
+  "title": "Tag statistics: count, group, compare",
+  "problem": "A blog stores each post's tags as a dict {post_id: [tags]}. Implement three functions in tags.py: count_tags (how many posts use each tag), posts_by_tag (which posts use each tag) and shared_tags (tags two posts have in common). Tags are case-insensitive and returned in lowercase.",
+  "requirements": [
+    "Treat tags case-insensitively and return them in lowercase",
+    "count_tags: a tag repeated inside one post counts once for that post",
+    "posts_by_tag: each tag maps to the post ids that use it, in the order the posts appear in the dict, each id at most once; tags appear in the order first seen",
+    "shared_tags: the tags both posts use, sorted alphabetically; an unknown post id counts as a post with no tags",
+    "Don't modify the input"
+  ],
+  "contract": "count_tags(posts: dict[int, list[str]]) -> dict[str, int]\nposts_by_tag(posts: dict[int, list[str]]) -> dict[str, list[int]]\nshared_tags(posts: dict[int, list[str]], a: int, b: int) -> list[str]",
+  "expectedBehavior": "For {10: ['python', 'web'], 11: ['Go', 'web', 'WEB'], 12: ['Python', 'testing', 'python'], 13: []}: count_tags -> {'python': 2, 'web': 2, 'go': 1, 'testing': 1}; posts_by_tag -> {'python': [10, 12], 'web': [10, 11], 'go': [11], 'testing': [12]}; shared_tags(posts, 10, 12) -> ['python'].",
+  "edgeCases": [
+    "The same tag twice in one post with different case ('web', 'WEB')",
+    "A post with no tags, and an empty dict",
+    "An unknown post id in shared_tags",
+    "Two posts with nothing in common",
+    "Results must be sorted where the spec says sorted, and in first-seen order where it says so"
+  ],
+  "tests": [
+    "test_count_tags",
+    "test_count_tags_is_case_insensitive_and_once_per_post",
+    "test_count_tags_empty",
+    "test_posts_by_tag",
+    "test_posts_by_tag_lists_each_post_once",
+    "test_posts_by_tag_keys_in_first_seen_order",
+    "test_shared_tags",
+    "test_shared_tags_sorted_and_case_insensitive",
+    "test_shared_tags_none_or_unknown_post",
+    "test_input_not_modified"
+  ],
+  "hints": [
+    "Conceptual: all three functions start the same way, by turning one post's tags into lowercase tags with duplicates removed. Do that once per post, then count (Counter or get), group (setdefault) or intersect (&).",
+    "Specific: a set removes duplicates but has no order, which is fine for counting and for shared_tags. For posts_by_tag the order of ids comes from the outer loop over posts.items(), so it stays correct as long as you add each post id at most once per tag. For an unknown id, posts.get(a, []) gives an empty tag list.",
+    "Implementation: write a small helper that loops over a post's tags, lowercases each, and keeps a seen set plus a result list. count_tags adds 1 per helper tag; posts_by_tag does index.setdefault(tag, []).append(post_id) per helper tag; shared_tags builds two sets and returns sorted(first & second)."
+  ],
+  "evaluation": [
+    "All tests pass",
+    "Lowercasing and de-duplication live in one place, not copied into all three functions",
+    "Uses dict/set/Counter tools rather than nested 'search the list' loops",
+    "No mutation of the input dict or its lists"
+  ]
+}

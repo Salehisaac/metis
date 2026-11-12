@@ -1,0 +1,55 @@
+{
+  "id": "WEB.M06.L01.E1",
+  "lesson": "WEB.M06.L01",
+  "title": "Hash and verify passwords with scrypt",
+  "problem": "Implement hash_password, verify_password and needs_rehash in passwords.py with hashlib.scrypt, a new random salt per password, the cost parameters stored inside each hash, and a constant-time comparison. The module docstring defines the stored format.",
+  "requirements": [
+    "Edit only passwords.py; keep the constants and function signatures",
+    "hash_password: a new os.urandom(SALT_BYTES) salt per call, scrypt with the current N, R, P, dklen=KEY_BYTES and maxmem=MAXMEM; return scrypt$n$r$p$salt_hex$key_hex",
+    "Read N, R and P when the function is called (the tests change N)",
+    "hash_password raises ValueError for passwords longer than MAX_PASSWORD_CHARS",
+    "verify_password recomputes with the n, r, p and salt from the stored string and compares with hmac.compare_digest",
+    "verify_password returns False, never raises, for a wrong or too-long password and for any malformed stored string",
+    "needs_rehash is True when the stored parameters differ from the current ones or the string is malformed"
+  ],
+  "contract": "hash_password(password: str) -> str; verify_password(password: str, stored: str) -> bool; needs_rehash(stored: str) -> bool",
+  "expectedBehavior": "verify_password('correct horse', hash_password('correct horse')) is True; two hashes of the same password differ; a hash made with N=2**10 still verifies after N becomes 2**11, and needs_rehash says True for it",
+  "edgeCases": [
+    "Wrong passwords that differ only by case, a trailing space or a missing suffix",
+    "Non-ASCII passwords (encode as UTF-8)",
+    "Stored strings with too few fields, another algorithm name, a non-number cost or non-hex salt",
+    "A password of exactly 1024 characters (allowed) and 1025 (rejected)"
+  ],
+  "tests": [
+    "test_hash_has_the_documented_format",
+    "test_hash_does_not_contain_the_password",
+    "test_same_password_gets_different_salts_and_hashes",
+    "test_verify_correct_password",
+    "test_verify_wrong_password[trailing-space]",
+    "test_verify_wrong_password[capitalised]",
+    "test_verify_wrong_password[empty]",
+    "test_verify_wrong_password[prefix]",
+    "test_unicode_password_round_trip",
+    "test_old_hash_still_verifies_after_cost_increase",
+    "test_malformed_stored_hash_is_false_not_an_exception[empty]",
+    "test_malformed_stored_hash_is_false_not_an_exception[plaintext]",
+    "test_malformed_stored_hash_is_false_not_an_exception[other-algorithm]",
+    "test_malformed_stored_hash_is_false_not_an_exception[n-not-a-number]",
+    "test_malformed_stored_hash_is_false_not_an_exception[salt-not-hex]",
+    "test_malformed_stored_hash_is_false_not_an_exception[too-few-fields]",
+    "test_too_long_password",
+    "test_keys_are_compared_in_constant_time"
+  ],
+  "hints": [
+    "Conceptual: verification never decrypts anything. It repeats the hashing with the same salt and parameters and compares the results. That's why the salt and the parameters must be stored next to the key, and why the stored string is parsed first.",
+    "Specific: write two private helpers: one that derives the key (password.encode('utf-8'), salt, n, r, p, maxmem, dklen) and one that parses the stored string into (n, r, p, salt, key) or None. int() and bytes.fromhex() raise ValueError on bad input; catch it and return None.",
+    "Implementation: hash_password checks the length, makes salt = os.urandom(SALT_BYTES), derives the key and returns f\"scrypt${N}${R}${P}${salt.hex()}${key.hex()}\". verify_password parses, returns False on None or a too-long password, derives with the stored values (catch ValueError from scrypt too) and returns hmac.compare_digest(candidate, key). needs_rehash returns parsed is None or parsed[:3] != (N, R, P)."
+  ],
+  "evaluation": [
+    "All 18 tests pass",
+    "A new salt from os.urandom for every hash; no fixed or reused salt",
+    "Comparison with hmac.compare_digest, never ==",
+    "Malformed input can't crash verification",
+    "You can explain why a fast hash such as sha256 is wrong here, even with a salt"
+  ]
+}

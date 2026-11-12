@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/ASSESSMENT_HISTORY.md",
+  "assessments": [
+    {
+      "id": "ASM-1",
+      "date": "2026-11-12",
+      "note": "Baseline. Option-question items count toward A only. NA = not assessed (never 0).",
+      "competencies": [
+        { "name": "Python fundamentals and data structures", "A": 1, "B": null, "C": null, "D": null, "confidence": "Medium", "evidence": "P1/P2: aliasing learned in-session; rebinding, slice clamping and split wrong" },
+        { "name": "Python functions (mutation vs rebinding)", "A": 1, "B": null, "C": null, "D": null, "confidence": "Medium", "evidence": "P2" },
+        { "name": "Python OOP, typing, generators, decorators, packaging", "A": null, "B": null, "C": null, "D": null, "confidence": "Not assessed", "evidence": "Self-report: syntax only" },
+        { "name": "Python async", "A": 0, "B": null, "C": null, "D": null, "confidence": "Low", "evidence": "Thinks await starts a thread" },
+        { "name": "General programming, unaided (Go)", "A": 2, "B": 2, "C": 1, "D": null, "confidence": "Medium", "evidence": "I1: misread spec, no sorting, tested only the example" },
+        { "name": "SQL basics (CRUD)", "A": 1, "B": null, "C": null, "D": null, "confidence": "Low", "evidence": "Self-report; written SQL skipped" },
+        { "name": "SQL JOINs, triggers, locking", "A": null, "B": null, "C": null, "D": null, "confidence": "Not assessed", "evidence": "Self-report: struggles" },
+        { "name": "Transactions and atomicity", "A": 0, "B": null, "C": null, "D": null, "confidence": "Low", "evidence": "Q-round misconception" },
+        { "name": "Security: SQL injection", "A": 2, "B": null, "C": null, "D": null, "confidence": "Low", "evidence": "Saw the risk, wrong fix (manual escaping)" },
+        { "name": "HTTP/REST semantics", "A": 2, "B": null, "C": null, "D": null, "confidence": "Low", "evidence": "409 and PUT idempotency correct" },
+        { "name": "Caching (Redis)", "A": 2, "B": null, "C": null, "D": null, "confidence": "Low", "evidence": "Invalidation scenario correct" },
+        { "name": "Architecture: async/event-driven", "A": 2, "B": null, "C": null, "D": null, "confidence": "Low", "evidence": "Queue-based design correct" },
+        { "name": "Testing", "A": 2, "B": null, "C": 1, "D": null, "confidence": "Low", "evidence": "Concept correct; never wrote tests; I1 tested one example" },
+        { "name": "Git", "A": null, "B": null, "C": null, "D": null, "confidence": "Not assessed", "evidence": "Self-report strong; history AI-assisted" },
+        { "name": "Docker", "A": null, "B": null, "C": null, "D": null, "confidence": "Not assessed", "evidence": "Self-report: runs existing setups" },
+        { "name": "FastAPI, Pydantic, SQLAlchemy", "A": null, "B": null, "C": null, "D": null, "confidence": "Not assessed", "evidence": "No experience" }
+      ]
+    }
+  ]
+}

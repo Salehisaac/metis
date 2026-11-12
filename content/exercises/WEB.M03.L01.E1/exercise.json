@@ -1,0 +1,45 @@
+{
+  "id": "WEB.M03.L01.E1",
+  "lesson": "WEB.M03.L01",
+  "title": "Settings-driven paging and a read-only switch with Depends",
+  "problem": "feed_api.py has finished routes that use three dependencies you must write: get_settings (configuration from the environment, built once), page_size (the request's page size, bounded by the settings) and require_writable (blocks writes in read-only mode).",
+  "requirements": [
+    "get_settings() builds Settings from the environment variables in ENV_VARS that are set (others keep their defaults), converts them with the model, and is cached with lru_cache",
+    "An invalid environment value (e.g. FEED_PAGE_SIZE_MAX=lots) raises pydantic.ValidationError",
+    "page_size depends on get_settings and takes the optional query parameter limit",
+    "Without limit: settings.page_size_default. With limit: must be 1..settings.page_size_max inclusive, else HTTPException 422 with detail \"limit must be between 1 and <max>\"",
+    "require_writable raises HTTPException 503 with detail \"feed is read-only\" when settings.read_only is true; otherwise it does nothing",
+    "Don't change the routes"
+  ],
+  "contract": "get_settings() -> Settings (cached); page_size(settings, limit: int | None = None) -> int; require_writable(settings) -> None",
+  "expectedBehavior": "GET /feed -> limit 20 and posts 250, 249, ...; with page_size_max=10: GET /feed?limit=11 -> 422 {\"detail\": \"limit must be between 1 and 10\"}; with read_only=True: POST /feed -> 503, GET /feed still 200",
+  "edgeCases": [
+    "limit exactly page_size_max and limit 1 are valid; 0 and negatives are not",
+    "limit=ten is FastAPI's own 422 (loc query.limit)",
+    "No environment variables at all gives Settings() with defaults",
+    "Changing the environment after the first call has no effect until cache_clear()",
+    "A blocked POST must not store anything"
+  ],
+  "tests": [
+    "test_default_page_size_comes_from_settings",
+    "test_limit_query_parameter",
+    "test_limit_bounds_follow_settings",
+    "test_non_integer_limit_is_rejected_by_fastapi",
+    "test_read_only_blocks_writes_but_not_reads",
+    "test_get_settings_reads_environment",
+    "test_get_settings_defaults_without_environment",
+    "test_get_settings_is_built_once",
+    "test_invalid_environment_fails_loudly"
+  ],
+  "hints": [
+    "Conceptual: get_settings is the only function that reads the environment. The other two only receive a Settings object, which is why the tests can swap it with dependency_overrides.",
+    "Specific: decorate get_settings with @lru_cache and build a dict of only the variables present, mapped to field names, then Settings.model_validate(that_dict). In page_size, handle limit is None first, then the range check.",
+    "Implementation: {field: os.environ[var] for var, field in ENV_VARS.items() if var in os.environ}; the range check is `if not 1 <= limit <= settings.page_size_max: raise HTTPException(status_code=422, detail=f\"...\")`; require_writable is two lines."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "Only get_settings touches os.environ",
+    "limit None is distinguished from 0",
+    "The routes are unchanged"
+  ]
+}

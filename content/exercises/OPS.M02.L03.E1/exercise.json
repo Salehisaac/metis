@@ -1,0 +1,41 @@
+{
+  "id": "OPS.M02.L03.E1",
+  "lesson": "OPS.M02.L03",
+  "title": "Request IDs and a safe 500 handler",
+  "problem": "Complete app.py: every request gets a request ID (reused from a valid incoming X-Request-ID header, otherwise generated), every log record from the 'app' logger carries it, and any unhandled exception is logged with its traceback and answered with a generic 500 that contains only the request ID.",
+  "requirements": [
+    "Middleware: if X-Request-ID matches VALID_ID, reuse it; otherwise use uuid.uuid4().hex",
+    "Store the ID in request_id_var and return it in the X-Request-ID response header",
+    "RequestIdFilter sets record.request_id from request_id_var on every record logged through log",
+    "An exception handler for Exception logs at ERROR with the traceback on the 'app' logger, with the method and path in the message",
+    "It returns status 500 with exactly {\"detail\": \"Internal Server Error\", \"request_id\": <id>} and the X-Request-ID header",
+    "Exception messages never reach the client; HTTPException responses (like the 404) stay unchanged"
+  ],
+  "contract": "app.py exposes app (FastAPI), log = logging.getLogger(\"app\"), request_id_var (ContextVar[str]) and RequestIdFilter. Tests use TestClient(app, raise_server_exceptions=False).",
+  "expectedBehavior": "GET /orders/13 with X-Request-ID: trace-2 returns 500 {\"detail\": \"Internal Server Error\", \"request_id\": \"trace-2\"} with header X-Request-ID: trace-2, and the 'app' logger records an ERROR with exc_info and request_id 'trace-2'. GET /orders/1 without the header returns a fresh 32-character hex ID.",
+  "edgeCases": [
+    "No incoming header: generate a new ID for every request",
+    "Incoming IDs with spaces, semicolons, empty or longer than 64 characters are replaced (they'd end up in your logs)",
+    "The 500 response for an unhandled exception doesn't pass back through @app.middleware, so the header must be set in the handler",
+    "HTTPException is handled by FastAPI's own handler and must not turn into a 500"
+  ],
+  "tests": [
+    "test_generates_a_request_id_when_none_is_sent",
+    "test_reuses_a_valid_incoming_request_id",
+    "test_replaces_an_invalid_incoming_request_id",
+    "test_log_records_carry_the_request_id",
+    "test_unhandled_error_returns_a_generic_500_with_the_request_id",
+    "test_unhandled_error_is_logged_with_traceback_and_request_id",
+    "test_http_exceptions_keep_their_normal_response"
+  ],
+  "hints": [
+    "Conceptual: the request ID is per-request context, so it belongs in a ContextVar that the middleware sets and that both the logging filter and the error handler read. Unhandled exceptions are answered by the outermost layer, outside your middleware.",
+    "Specific: in the middleware, choose the ID, call request_id_var.set(...), await call_next(request), then set the header on the response. Register the handler with @app.exception_handler(Exception) and use log.exception(...) inside it.",
+    "Implementation: rid = incoming if VALID_ID.match(incoming) else uuid.uuid4().hex; in the filter record.request_id = request_id_var.get(); in the handler return JSONResponse(status_code=500, content={\"detail\": \"Internal Server Error\", \"request_id\": rid}, headers={\"X-Request-ID\": rid})."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "The handler's log message identifies the request (method and path) without logging secrets from the request",
+    "No str(exc) in the response body"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "PY.M03.L05.E1",
+  "lesson": "PY.M03.L05",
+  "title": "Orders report with comprehensions",
+  "problem": "An admin dashboard needs five small numbers and lists from a list of orders. Implement the five functions in report.py. Each one can be a single return statement using a list, dict or set comprehension, or a generator expression; pick the right kind for each.",
+  "requirements": [
+    "paid_ids: ids of orders whose status is \"paid\", in input order",
+    "cents_by_id: a dict mapping every order id to its cents",
+    "customers_with: distinct customers with at least one order of the given status, sorted alphabetically",
+    "revenue: total cents of paid orders, 0 if there are none",
+    "has_order_over: True if any order's cents is strictly greater than limit",
+    "Don't modify the orders or the list"
+  ],
+  "contract": "paid_ids(orders: list[dict]) -> list[int]\ncents_by_id(orders: list[dict]) -> dict[int, int]\ncustomers_with(orders: list[dict], status: str) -> list[str]\nrevenue(orders: list[dict]) -> int\nhas_order_over(orders: list[dict], limit: int) -> bool",
+  "expectedBehavior": "For the five sample orders: paid_ids -> [7, 9, 5]; customers_with(orders, 'paid') -> ['ali', 'mina']; revenue -> 2450; has_order_over(orders, 5000) -> False, has_order_over(orders, 4999) -> True.",
+  "edgeCases": [
+    "Empty list for every function (sum of nothing is 0, any of nothing is False)",
+    "A customer with several matching orders appears once",
+    "A status nobody has gives []",
+    "The comparison in has_order_over is strict: equal to the limit is not over it"
+  ],
+  "tests": [
+    "test_paid_ids_in_input_order",
+    "test_cents_by_id",
+    "test_customers_with_status_distinct_and_sorted",
+    "test_customers_with_unknown_status",
+    "test_revenue_counts_only_paid",
+    "test_has_order_over_is_strict",
+    "test_empty_orders",
+    "test_input_not_modified"
+  ],
+  "hints": [
+    "Conceptual: ask what each function returns. An ordered list means a list comprehension. A mapping means a dict comprehension. 'Distinct' means a set, and 'sorted' means sorted() around it. One number or one bool means a generator expression fed to sum or any.",
+    "Specific: each order is a dict, so read fields with o[\"status\"] and o[\"cents\"]. Filters go at the end (if ...). A set has no order, so the sorted list must come from sorted(the_set).",
+    "Implementation: paid_ids and revenue share the same filter (status == \"paid\"); one collects ids in [...], the other passes cents to sum(...). customers_with is sorted({... for o in orders if ...}). has_order_over is any(... > limit for o in orders)."
+  ],
+  "evaluation": [
+    "All tests pass",
+    "Each function is a single return with the most fitting comprehension or generator expression",
+    "No temporary list built just to be summed or checked with any",
+    "Readable: no nested conditionals inside the comprehensions"
+  ]
+}

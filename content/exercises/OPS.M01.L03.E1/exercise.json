@@ -1,0 +1,39 @@
+{
+  "id": "OPS.M01.L03.E1",
+  "lesson": "OPS.M01.L03",
+  "title": "Fix a compose stack: healthchecks, pinned images, no plaintext passwords",
+  "problem": "The compose file for the FastAPI app, PostgreSQL and Redis starts, but the api often crashes on boot because Postgres isn't ready yet, both images float on latest, the database password is committed in plain text, and the data disappears with the container. Fix all four.",
+  "requirements": [
+    "Keep the service names api, db and cache",
+    "Pin the official images by version: postgres:N... and redis:N... (no bare name, no latest)",
+    "db has a healthcheck using pg_isready; cache has a healthcheck using redis-cli ping",
+    "api uses the long depends_on syntax with condition: service_healthy for both db and cache",
+    "No plaintext secrets: values of keys containing PASSWORD/SECRET/TOKEN use ${VAR} interpolation (or a *_FILE secret path), and no URL contains a literal password",
+    "db stores its data in a named volume, declared under top-level volumes:, mounted at /var/lib/postgresql"
+  ],
+  "contract": "A file named compose.yaml in this folder, parsed with yaml.safe_load. The values for ${...} come from an uncommitted .env file next to it.",
+  "expectedBehavior": "All five tests pass. With Docker, `docker compose up` would start db and cache first, start api only after both report healthy, and refuse to start if POSTGRES_PASSWORD isn't set (when you use ${POSTGRES_PASSWORD:?message}).",
+  "edgeCases": [
+    "depends_on as a list (short syntax) only waits for containers to start, not to be ready",
+    "The password also hides inside DATABASE_URL, not just POSTGRES_PASSWORD",
+    "A bind mount (./data:/var/lib/postgresql) isn't a named volume",
+    "postgres:18 and later keep data under /var/lib/postgresql (17 and earlier: /var/lib/postgresql/data)"
+  ],
+  "tests": [
+    "test_images_are_pinned",
+    "test_db_and_cache_have_healthchecks",
+    "test_api_waits_for_healthy_db_and_cache",
+    "test_no_plaintext_secrets",
+    "test_postgres_data_survives_in_a_named_volume"
+  ],
+  "hints": [
+    "Conceptual: Compose only knows that a dependency is ready if that service has a healthcheck, and the dependent service only waits for it if it asks for condition: service_healthy.",
+    "Specific: add healthcheck: blocks (test, interval, timeout, retries) to db and cache, turn api's depends_on list into a mapping of service -> {condition: ...}, replace both hunter2 occurrences with ${POSTGRES_PASSWORD...}, and add volumes: at the service and the top level.",
+    "Implementation: db test: [\"CMD\", \"pg_isready\", \"-U\", \"app\", \"-d\", \"app\"]; cache test: [\"CMD\", \"redis-cli\", \"ping\"]; depends_on: db: condition: service_healthy (same for cache); POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in .env}; volumes: - NAME:/var/lib/postgresql plus a top-level volumes: NAME:."
+  ],
+  "evaluation": [
+    "All five tests pass",
+    "The ${VAR:?message} form is used so a missing password fails loudly instead of becoming an empty string",
+    "A .env.example (without real values) would document the variables; the real .env is never committed"
+  ]
+}

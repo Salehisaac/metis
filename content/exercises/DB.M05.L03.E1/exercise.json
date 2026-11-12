@@ -1,0 +1,38 @@
+{
+  "id": "DB.M05.L03.E1",
+  "lesson": "DB.M05.L03",
+  "title": "Measure before you index: best_time, seed_messages, index_report",
+  "problem": "Build the three helpers you need to justify an index with numbers: a timer that reports seconds per call, a deterministic data generator, and a report that measures a query and its plan before and after creating an index.",
+  "requirements": [
+    "best_time runs fn number times per round for repeat rounds and returns the fastest round divided by number",
+    "best_time raises ValueError if number or repeat is less than 1",
+    "seed_messages inserts n rows in one committed transaction and returns n; the same seed always gives the same rows",
+    "seed_messages uses chat_id in 1..chats, sender_id in 1..1000 and created_at as YYYY-MM-DD in 2026",
+    "index_report returns before/after seconds per query and before/after plan detail lists, and leaves the index created",
+    "The timed function must fetch the rows, not just start the query"
+  ],
+  "contract": "best_time(fn, number=10, repeat=5) -> float; seed_messages(conn, n, chats, seed=0) -> int; index_report(conn, sql, params, index_ddl, number=20) -> dict",
+  "expectedBehavior": "On 30,000 seeded rows, index_report for the chat history query shows plan_before starting with SCAN messages, plan_after a SEARCH using the new index, and after < before",
+  "edgeCases": ["number=0 or repeat=0", "n=0 rows", "Same seed twice", "The connection must not be left inside a transaction"],
+  "tests": [
+    "test_best_time_calls_fn_number_times_repeat",
+    "test_best_time_is_seconds_per_call",
+    "test_best_time_rejects_zero_rounds",
+    "test_seed_inserts_n_rows_in_range",
+    "test_seed_is_deterministic",
+    "test_seed_commits",
+    "test_seed_zero_rows",
+    "test_index_report_shows_scan_then_search_and_a_speedup",
+    "test_index_report_leaves_the_index_in_place"
+  ],
+  "hints": [
+    "Conceptual: timeit.repeat already does the rounds; your job is to pick the right number from its list and convert it to per-call seconds. For data, a seeded random.Random makes runs reproducible.",
+    "Specific: min(timeit.repeat(fn, number=number, repeat=repeat)) / number. Build all rows in a list first, then insert them with executemany inside `with conn:`. For the report, wrap the query in a small function that calls .fetchall().",
+    "Implementation: index_report = plan before, time before, conn.execute(index_ddl), plan after, time after. Get the plan with [row[3] for row in conn.execute('EXPLAIN QUERY PLAN ' + sql, params)]."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "No global random state is used (random.Random(seed), not random.seed)",
+    "One transaction for the whole seed, parameters bound with placeholders"
+  ]
+}

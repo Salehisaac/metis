@@ -1,0 +1,47 @@
+{
+  "id": "PY.M05.L01.E1",
+  "lesson": "PY.M05.L01",
+  "title": "Write an Inventory class",
+  "problem": "Implement the Inventory class in inventory.py: stock counts per SKU for one warehouse. Each instance owns its own stock, adds and removes are validated, a classmethod builds an inventory from a dict, and total is a read-only property. The method signatures are given; replace each NotImplementedError.",
+  "requirements": [
+    "Inventory() starts empty, and two inventories never share stock",
+    "add(sku, qty) increases the count; qty <= 0 raises ValueError",
+    "remove(sku, qty) decreases the count; qty <= 0, or more than is in stock, raises ValueError and leaves the stock unchanged",
+    "A SKU whose count reaches 0 disappears from the inventory",
+    "count(sku) returns 0 for a SKU that isn't stocked",
+    "Inventory.from_counts(counts) returns a new Inventory with the same counts, validates every qty like add, and doesn't keep a reference to the caller's dict",
+    "total is a property (inv.total, no parentheses): the sum of all counts",
+    "repr(inv) is 'Inventory(' + repr of the {sku: qty} dict + ')', for example Inventory({'pear': 1})"
+  ],
+  "contract": "class Inventory: __init__(self) -> None; from_counts(cls, counts: dict[str, int]) -> Inventory (classmethod); add(self, sku: str, qty: int) -> None; remove(self, sku: str, qty: int) -> None; count(self, sku: str) -> int; total -> int (property); __repr__(self) -> str",
+  "expectedBehavior": "inv = Inventory(); inv.add('apple', 3); inv.remove('apple', 1); inv.count('apple') == 2; inv.total == 2; repr(inv) == \"Inventory({'apple': 2})\"; inv.remove('apple', 5) raises ValueError and the count stays 2",
+  "edgeCases": [
+    "Two Inventory() objects: adding to one must not change the other",
+    "qty of 0 or a negative number, for both add and remove",
+    "Removing more than is in stock, or a SKU that was never added",
+    "Removing exactly what's left: the SKU disappears from repr",
+    "Changing the dict you passed to from_counts afterwards must not change the inventory",
+    "An empty inventory: count is 0, total is 0"
+  ],
+  "tests": [
+    "test_add_and_count",
+    "test_count_unknown_sku_is_zero",
+    "test_inventories_do_not_share_stock",
+    "test_add_rejects_non_positive_qty",
+    "test_remove_too_many_raises_and_keeps_stock",
+    "test_remove_to_zero_drops_sku",
+    "test_from_counts_copies_and_validates",
+    "test_total_is_a_property"
+  ],
+  "hints": [
+    "Conceptual: what does each warehouse need to remember, and where must that state be created so that two Inventory() objects don't share it? (Section 4.) Check every error condition before changing anything.",
+    "Specific: keep a dict {sku: qty} created in __init__. from_counts is a classmethod: create cls() and feed each entry through add, which validates and copies at the same time.",
+    "Implementation: add uses self._stock.get(sku, 0) + qty; remove compares qty with self.count(sku) first, then either deletes the key (qty equals what's there) or stores the difference; total is sum(self._stock.values()); __repr__ returns f\"Inventory({self._stock!r})\"."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "State is created in __init__, not at class level",
+    "Errors are raised before any mutation",
+    "from_counts uses cls and doesn't alias the input dict"
+  ]
+}

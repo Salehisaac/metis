@@ -1,0 +1,42 @@
+{
+  "id": "DB.M08.L03.E1",
+  "lesson": "DB.M08.L03",
+  "title": "One pinned message per chat (partial unique index) and JSON settings",
+  "problem": "Enforce 'at most one pinned message per chat' with a partial unique index, fix pin_message so it switches the pin atomically (it currently breaks once the index exists), and write a SQL query over a JSON settings column with a default for missing keys.",
+  "requirements": [
+    "PIN_INDEX is a CREATE UNIQUE INDEX named uq_messages_one_pin_per_chat with a WHERE clause, allowing one pinned message per chat",
+    "The lookup `WHERE chat_id = ? AND pinned = 1` uses that index",
+    "pin_message pins the message and unpins the chat's previous pin in one transaction; pinning the same message twice is fine",
+    "pin_message raises LookupError for a missing message, changes nothing and leaves no transaction open",
+    "users_with_notifications returns usernames A-Z whose settings.notifications is true, or missing (default on), filtering in SQL"
+  ],
+  "contract": "PIN_INDEX: str; pin_message(conn, message_id) -> None; users_with_notifications(conn) -> list[str]",
+  "expectedBehavior": "After pin_message(conn, 1) and pin_message(conn, 3) (both in chat 1), only message 3 is pinned in chat 1; users with settings NULL or without the key are included",
+  "edgeCases": [
+    "Unpinned duplicates in a chat are allowed",
+    "Pinning in another chat is independent",
+    "Pinning an already pinned message",
+    "Missing message",
+    "settings NULL, key missing, explicit false"
+  ],
+  "tests": [
+    "test_index_allows_one_pin_per_chat",
+    "test_index_is_partial",
+    "test_pinned_lookup_uses_the_index",
+    "test_pin_message_pins_and_switches",
+    "test_pin_message_twice_is_fine",
+    "test_pin_missing_message_changes_nothing",
+    "test_notifications_default_on",
+    "test_notifications_no_users"
+  ],
+  "hints": [
+    "Conceptual: a unique index with a WHERE clause only constrains the rows that match it. Once it exists, the order of the two UPDATEs in pin_message matters, and both must be one transaction.",
+    "Specific: the index is on (chat_id) WHERE pinned = 1. In pin_message, look up the chat first (LookupError if missing), unpin the old pin, then set the new one, inside BEGIN IMMEDIATE ... COMMIT with ROLLBACK on errors. For JSON, ->> returns 1/0 for true/false and NULL for a missing key.",
+    "Implementation: PIN_INDEX = \"CREATE UNIQUE INDEX uq_messages_one_pin_per_chat ON messages (chat_id) WHERE pinned = 1\"; the query is SELECT username FROM users WHERE coalesce(settings ->> '$.notifications', 1) = 1 ORDER BY username."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "No JSON parsing in Python",
+    "The transaction is always closed (commit or rollback)"
+  ]
+}

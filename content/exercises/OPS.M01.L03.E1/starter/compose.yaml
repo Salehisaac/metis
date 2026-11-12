@@ -1,0 +1,24 @@
+# Local stack for the FastAPI app: api + PostgreSQL + Redis.
+# It starts, but the api often crashes on boot ("connection refused" from Postgres),
+# the passwords are committed in plain text, and the database is lost on `docker compose down`.
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://app:hunter2@db:5432/app
+      REDIS_URL: redis://cache:6379/0
+    depends_on:
+      - db
+      - cache
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_DB: app
+      POSTGRES_PASSWORD: hunter2
+
+  cache:
+    image: redis

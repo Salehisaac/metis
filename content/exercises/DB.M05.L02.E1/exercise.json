@@ -1,0 +1,43 @@
+{
+  "id": "DB.M05.L02.E1",
+  "lesson": "DB.M05.L02",
+  "title": "Index the inbox: four hot queries, at most three indexes",
+  "problem": "The messenger runs four hot queries (they're in the test file). Choose at most three CREATE INDEX statements so that every query is a SEARCH, the two ORDER BY queries need no sort step, the unread count and 'my chats' never touch the table, and no index is a prefix of another.",
+  "requirements": [
+    "INDEXES contains only CREATE INDEX statements, at most three",
+    "MY_CHATS: a covering SEARCH on chat_members, no USE TEMP B-TREE",
+    "HISTORY_PAGE: a SEARCH using chat_id=? AND created_at<?, no USE TEMP B-TREE",
+    "UNREAD_COUNT: a SEARCH using a COVERING INDEX on chat_id=? AND created_at>?",
+    "SENT_IN_CHAT: a SEARCH using both chat_id and sender_id",
+    "No index's columns are a prefix of another index's columns",
+    "Don't change the queries or the schema"
+  ],
+  "contract": "inbox_indexes.INDEXES: list[str] of CREATE INDEX statements",
+  "expectedBehavior": "Every query's EXPLAIN QUERY PLAN shows SEARCH with the listed columns, and the queries return the same rows as without indexes",
+  "edgeCases": [
+    "The composite primary key (chat_id, user_id) can't serve a filter on user_id",
+    "A range (< or >) on an index column stops later columns from being searched",
+    "A covering index must contain every column the query reads",
+    "An index that is a prefix of another is redundant"
+  ],
+  "tests": [
+    "test_every_entry_is_a_create_index_statement",
+    "test_my_chats_is_a_covering_search_without_sort",
+    "test_history_page_uses_chat_and_time_without_sort",
+    "test_unread_count_never_touches_the_table",
+    "test_sent_in_chat_searches_on_both_columns",
+    "test_no_index_is_a_prefix_of_another",
+    "test_at_most_three_indexes",
+    "test_queries_still_return_the_right_rows"
+  ],
+  "hints": [
+    "Conceptual: for each query, list the equality columns, then the one range or ORDER BY column, then the other columns it reads. Two of the four queries can share one index.",
+    "Specific: HISTORY_PAGE and UNREAD_COUNT both filter chat_id with = and created_at with a range. MY_CHATS reads only chat_id, so chat_id must be inside its index to make it covering.",
+    "Implementation: three indexes: chat_members (user_id, joined_at, chat_id); messages (chat_id, created_at); and messages on sender_id and chat_id. Check each with your explain() helper from L01."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "Index names follow idx_<table>_<columns>",
+    "You can say for each index which query it serves and why its column order is what it is"
+  ]
+}

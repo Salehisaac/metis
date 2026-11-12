@@ -1,0 +1,40 @@
+{
+  "id": "DB.M07.L05.E1",
+  "lesson": "DB.M07.L05",
+  "title": "Fix a migration: NOT NULL on a populated table, and a real downgrade",
+  "problem": "Revision 0002 adds chats.member_count. It passed on the developer's empty database but fails in production, and its downgrade does nothing. Fix rev_0002_member_count.py so that it upgrades a populated database with correct counts, and downgrades cleanly. The tests run real `alembic upgrade` and `downgrade` commands on a fresh SQLite file.",
+  "requirements": [
+    "member_count is NOT NULL",
+    "Upgrading a database that already has chats sets each chat's member_count to its real number of members (0 for none)",
+    "A chat inserted later without member_count gets 0",
+    "downgrade() removes member_count and keeps every chat and membership row",
+    "upgrade -> downgrade -> upgrade works; downgrade to base works",
+    "Don't change rev_0001_initial.py, the revision ids or the test file"
+  ],
+  "contract": "rev_0002_member_count.py: upgrade() and downgrade(), revision '0002', down_revision '0001'",
+  "expectedBehavior": "After seeding chats general (3 members), backend (1) and empty (0) at revision 0001, `upgrade head` gives member_count 3, 1 and 0; `downgrade -1` returns to revision 0001 with the column gone and all rows intact",
+  "edgeCases": [
+    "Empty database vs populated database",
+    "A chat with no members",
+    "Inserts that don't mention the new column",
+    "Repeating the upgrade after a downgrade"
+  ],
+  "tests": [
+    "test_upgrade_on_an_empty_database",
+    "test_upgrade_backfills_existing_chats",
+    "test_new_chats_start_at_zero",
+    "test_downgrade_removes_the_column_and_keeps_the_data",
+    "test_round_trip_upgrade_downgrade_upgrade",
+    "test_downgrade_to_base_leaves_no_tables"
+  ],
+  "hints": [
+    "Conceptual: existing rows need a value the moment a NOT NULL column appears, and later inserts need one too. Then the real counts have to be written. A downgrade must undo exactly what the upgrade did.",
+    "Specific: a server_default on the new column solves both 'existing rows' and 'later inserts'. A correlated subquery in op.execute() can compute each chat's count. On SQLite, dropping a column goes through op.batch_alter_table().",
+    "Implementation: in a batch_alter_table('chats') block, add_column(sa.Column('member_count', sa.Integer(), nullable=False, server_default='0')); then op.execute('UPDATE chats SET member_count = (SELECT count(*) FROM chat_members WHERE chat_members.chat_id = chats.id)'). downgrade: batch_alter_table('chats') with drop_column('member_count')."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "The migration doesn't import ORM models (plain SQL or op.* only)",
+    "upgrade and downgrade are exact inverses"
+  ]
+}

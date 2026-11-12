@@ -1,0 +1,41 @@
+{
+  "id": "DB.M03.L03.E1",
+  "lesson": "DB.M03.L03",
+  "title": "Write the tests that prove leave_chat is atomic",
+  "problem": "membership.leave_chat posts a 'left the chat' message and deletes the membership, as one transaction. It's correct. Write the tests in test_leave_chat.py. test_meta.py swaps in five buggy versions (never commits, commits too early, forgets to roll back, swallows the error, leaves every chat) and checks that at least one of your tests fails on each, while all of them pass on the real function.",
+  "requirements": [
+    "Edit only test_leave_chat.py; don't change membership.py or test_meta.py",
+    "Keep `import membership` and call membership.leave_chat(...)",
+    "Each test function takes no arguments or only tmp_path",
+    "At least 3 tests, all passing on the real leave_chat",
+    "Every one of the five bugs makes at least one of your tests fail",
+    "Write your tests from leave_chat's docstring first; read the bug docstrings in test_meta.py only after your first run"
+  ],
+  "contract": "test_leave_chat.py: pytest test functions (test_*), each with no parameters or only tmp_path, calling membership.leave_chat(conn, chat_id, user_id, now) and membership.NotAMember",
+  "expectedBehavior": "pytest -q shows your own tests passing, test_your_tests_pass_on_the_real_function passing, and test_your_tests_catch[bug_...] passing for all five bugs",
+  "edgeCases": [
+    "Success must be visible to a second connection, not only to the one that wrote it",
+    "A failure must leave nothing on the second connection AND on the same connection, with no transaction left open",
+    "The error must reach the caller",
+    "The user's memberships in other chats, and other members of this chat, are untouched"
+  ],
+  "tests": [
+    "test_leaving_removes_membership_and_posts_a_message",
+    "test_your_tests_pass_on_the_real_function",
+    "test_your_tests_catch[bug_never_commits]",
+    "test_your_tests_catch[bug_commits_message_first]",
+    "test_your_tests_catch[bug_no_rollback]",
+    "test_your_tests_catch[bug_swallows_error]",
+    "test_your_tests_catch[bug_leaves_every_chat]"
+  ],
+  "hints": [
+    "Conceptual: for each promise in the docstring, ask who could observe it being broken. 'Committed' is only observable from another connection. 'Writes nothing' must hold for every connection, including the one that called the function. 'Raises NotAMember' needs pytest.raises.",
+    "Specific: use chatdb.make_file_db(tmp_path / 'chat.db') plus sqlite3.connect(same path) for a second connection. Take a snapshot of chat_members and messages before the call and compare after. conn.in_transaction tells you if a transaction was left open. ana (user 1) is not a member of chat 4.",
+    "Implementation: one test for the committed success (second connection sees the membership gone and the message); one test for the non-member (pytest.raises(membership.NotAMember), then snapshot(conn) == before, snapshot(other) == before, conn.in_transaction is False); one test that leaving chat 1 keeps the user in chats 2 and 3 and keeps the other two members of chat 1."
+  ],
+  "evaluation": [
+    "All seven listed tests pass (your example test, the real-function check, five bug checks)",
+    "Assertions say what was expected, so a failure explains itself",
+    "The failure-path test checks the same connection, not only another one"
+  ]
+}

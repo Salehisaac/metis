@@ -1,0 +1,32 @@
+{
+  "id": "PY.M01.L01.E1",
+  "lesson": "PY.M01.L01",
+  "title": "FIXTURE: count words",
+  "problem": "Count how often each word appears in a text. <b>Not bold</b>.",
+  "requirements": [
+    "Split on any whitespace",
+    "Words are case-insensitive",
+    "Return a dict word -> count"
+  ],
+  "contract": "count_words(text: str) -> dict[str, int]",
+  "expectedBehavior": "count_words('Go py go') == {'go': 2, 'py': 1}",
+  "edgeCases": [
+    "Empty string returns {}",
+    "Only whitespace returns {}",
+    "Mixed case merges"
+  ],
+  "tests": [
+    "test_example",
+    "test_empty_and_whitespace"
+  ],
+  "hints": [
+    "Conceptual: you need a mapping from word to how many times you have seen it.",
+    "Specific: str.split() with no argument splits on runs of whitespace; str.lower() normalises case.",
+    "Implementation: loop over text.lower().split() and use counts.get(word, 0) + 1."
+  ],
+  "evaluation": [
+    "All tests pass",
+    "No special-casing of test inputs",
+    "Readable names"
+  ]
+}

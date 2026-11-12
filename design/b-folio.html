@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metis Folio (UI preview B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --paper:#EDF0F5; --page:#F8F9FC; --ink:#1B2A4A; --soft:#56627F; --rule:#CCD3E0; --gold:#E3A21A; --teal:#2B7A78; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:18px/1.7 "Literata", Georgia, serif; }
+.bar { display:flex; align-items:center; gap:28px; padding:14px 40px; font:500 14px "Work Sans", sans-serif; color:var(--soft); }
+.brand { display:flex; align-items:center; gap:10px; color:var(--ink); font:italic 22px "Literata", serif; }
+.bar nav { display:flex; gap:22px; } .bar nav a { color:inherit; text-decoration:none; } .bar nav a.on { color:var(--ink); box-shadow:inset 0 -2px var(--gold); }
+.chip { margin-left:auto; font:12px "Work Sans"; border:1px dashed var(--rule); border-radius:999px; padding:2px 10px; }
+.sheet { max-width:1060px; margin:10px auto 40px; background:var(--page); border-radius:4px 4px 18px 4px; box-shadow:0 1px 0 var(--rule), 0 30px 60px -40px rgba(27,42,74,.45); padding:56px 70px 64px; display:grid; grid-template-columns:minmax(0,1fr) 230px; column-gap:48px; }
+.opener { grid-column:1 / -1; text-align:center; margin-bottom:34px; }
+.orn { display:block; margin:0 auto 12px; }
+.orn path, .owl path, .owl circle { stroke-dasharray:400; stroke-dashoffset:400; animation:draw 1.8s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset:0; } }
+.kicker { font:500 15px "Work Sans", sans-serif; color:var(--teal); }
+h1 { font-weight:600; font-size:44px; line-height:1.12; margin:8px auto 0; max-width:16ch; letter-spacing:-.01em; }
+.meta { font:14px "Work Sans"; color:var(--soft); margin-top:14px; }
+.text p { margin:0 0 1.1em; max-width:62ch; } .text p:first-of-type::first-letter { float:left; font-size:3.3em; line-height:.85; padding:6px 8px 0 0; color:var(--gold); font-weight:600; }
+.pull { font-style:italic; font-size:22px; line-height:1.5; border-left:3px solid var(--gold); padding-left:18px; margin:26px 0; color:var(--ink); }
+code { white-space:pre-wrap; font:15px "JetBrains Mono", ui-monospace, monospace; background:#E3E8F2; padding:1px 5px; border-radius:4px; }
+.notes { font:14px/1.55 "Work Sans", sans-serif; color:var(--soft); }
+.note { border-top:2px solid var(--teal); padding-top:8px; margin-bottom:26px; opacity:0; transform:translateX(12px); animation:slide .6s ease-out forwards; }
+.note:nth-child(1){animation-delay:1.6s} .note:nth-child(2){animation-delay:1.9s}
+.note b { display:block; color:var(--teal); font-weight:600; margin-bottom:2px; }
+@keyframes slide { to { opacity:1; transform:none; } }
+.check { grid-column:1; margin-top:14px; border:1px solid var(--rule); border-radius:14px; padding:22px 26px; background:#fff; }
+.check h2 { font:600 15px "Work Sans"; color:var(--teal); margin:0 0 6px; }
+.check p { margin:0 0 12px; } .opts { display:flex; gap:12px; flex-wrap:wrap; font:15px "Work Sans"; }
+.opts span { border:1px solid var(--rule); border-radius:999px; padding:6px 14px; } .opts .sel { border-color:var(--teal); background:#E2F1F0; }
+.fb { font:14px "Work Sans"; color:var(--teal); margin-top:10px; }
+@media (max-width:860px) { .sheet { grid-template-columns:1fr; padding:30px 22px; } .notes { order:3; } }
+@media (prefers-reduced-motion: reduce) { * { animation-duration:0s !important; animation-delay:0s !important; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <span class="brand">
+    <svg class="owl" width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="#1B2A4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 14c0-6 5-10 12-10s12 4 12 10v10c0 7-5 12-12 12S8 31 8 24z"/><path d="M8 8l5 5M32 8l-5 5"/>
+      <circle cx="15" cy="17" r="4" stroke="#E3A21A"/><circle cx="25" cy="17" r="4" stroke="#E3A21A"/><path d="M18 23l2 3 2-3"/>
+    </svg>Metis</span>
+  <nav><a href="#">Reading list</a><a class="on" href="#">Python for Go developers</a><a href="#">Reviews</a><a href="#">Notebook</a></nav>
+  <span class="chip">preview · sample text</span>
+</header>
+<article class="sheet">
+  <div class="opener">
+    <svg class="orn" width="160" height="22" viewBox="0 0 160 22" aria-hidden="true" fill="none" stroke="#E3A21A" stroke-width="1.5"><path d="M2 11h60M98 11h60M70 11c3-8 17-8 20 0-3 8-17 8-20 0z"/></svg>
+    <div class="kicker">Module 1, lesson 3</div>
+    <h1>Reading a test, running it, reading a failure</h1>
+    <div class="meta">35 minutes · beginner · after “venv and pip”</div>
+  </div>
+  <div class="text">
+    <p>A test is a sentence of the specification: given this input, the result must be this. Read the three tests below as you would read requirements, and the bug becomes visible before you run anything.</p>
+    <p>When pytest reports <code>assert 3 == 2</code>, the left side is what your code produced and the right side is what the test expected. The line underneath, <code>where 3 = count_words('go  py')</code>, names the call that produced it.</p>
+    <p class="pull">A green test is only as good as what it checks.</p>
+    <p>That's why every exercise in this academy ships the edge cases you skipped in your assessment: empty input, extra whitespace, ties.</p>
+  </div>
+  <aside class="notes" aria-label="Margin notes">
+    <div class="note"><b>From Go</b><code>go test</code> wants <code>func TestX(t *testing.T)</code> and messages you write. pytest discovers <code>test_*</code> functions and explains failures itself.</div>
+    <div class="note"><b>Your history</b>In assessment I1 you checked one example by hand. The bug lived in the cases you didn't try.</div>
+  </aside>
+  <section class="check" aria-label="Check yourself">
+    <h2>Check yourself</h2>
+    <p>Which file does pytest not collect by default?</p>
+    <div class="opts"><span>test_words.py</span><span>words_test.py</span><span class="sel">check_words.py</span><span>tests/test_api.py</span></div>
+    <div class="fb">Correct. Only test_*.py and *_test.py are collected; this one reports “no tests ran”.</div>
+  </section>
+</article>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "id": "WEB.M06.L03.E1",
+  "lesson": "WEB.M06.L03",
+  "title": "Implement login and get_current_user",
+  "problem": "Implement the two missing pieces of the chat API's authentication in app.py: POST /auth/token reads the username and password as OAuth2 form fields (OAuth2PasswordRequestForm), checks them and returns a bearer token, and get_current_user turns the token from the Authorization header into a User, answering 401 with WWW-Authenticate: Bearer for every kind of bad token. security.py already hashes passwords and creates and verifies tokens.",
+  "requirements": [
+    "Edit only app.py. Don't change security.py, conftest.py or test_auth.py",
+    "login reads the credentials from the OAuth2PasswordRequestForm parameter (form.username, form.password); the signature is already there",
+    "login: correct credentials return {\"access_token\": create_access_token(user.id), \"token_type\": \"bearer\"}",
+    "login: an unknown username and a wrong password both answer 400 with detail \"Incorrect username or password\"",
+    "login: every failed attempt runs exactly one verify_password call (against DUMMY_HASH when the user doesn't exist)",
+    "get_current_user: decode with decode_access_token; any jwt.InvalidTokenError, a sub that isn't an integer, or a user id that no longer exists raises credentials_error()",
+    "Never return the password hash in a response"
+  ],
+  "contract": "POST /auth/token with form fields username, password -> 200 {access_token, token_type: \"bearer\"} | 400 (a JSON body gets 422); get_current_user(request, token) -> User or raises HTTPException(401, headers={\"WWW-Authenticate\": \"Bearer\"})",
+  "expectedBehavior": "ali logs in with s3cret-pass and GET /users/me with the token returns {\"id\": 1, \"username\": \"ali\"}; garbage, foreign, expired and deleted-user tokens get 401; the disabled user sara gets 400 Inactive user",
+  "edgeCases": [
+    "Unknown username: same status, body and amount of hashing work as a wrong password",
+    "A valid token for a user who was deleted after it was issued",
+    "A correctly signed token whose sub isn't a number",
+    "No Authorization header, or a scheme other than Bearer"
+  ],
+  "tests": [
+    "test_login_returns_a_bearer_token",
+    "test_wrong_password_is_400",
+    "test_unknown_user_gets_the_same_error",
+    "test_every_failed_login_runs_one_password_check[ali]",
+    "test_every_failed_login_runs_one_password_check[nobody]",
+    "test_login_takes_form_fields_not_json",
+    "test_me_returns_the_user_without_secrets",
+    "test_me_without_token_is_401",
+    "test_me_with_bad_token_is_401[garbage]",
+    "test_me_with_bad_token_is_401[other-key]",
+    "test_me_with_bad_token_is_401[expired]",
+    "test_me_with_bad_token_is_401[deleted-user]",
+    "test_me_with_bad_token_is_401[sub-not-an-id]",
+    "test_disabled_user_is_400_inactive"
+  ],
+  "hints": [
+    "Conceptual: authentication answers one question, 'who is this?', and every way of not knowing (no token, bad token, expired token, user gone) gets the same 401. Login must not leak which half of the credentials was wrong, through the message or through the time it takes.",
+    "Specific: in login, look the user up in app.state.users; if it's missing, still call verify_password with DUMMY_HASH, then raise the 400. In get_current_user, wrap decode_access_token(token) and int(claims[\"sub\"]) in one try and catch (jwt.InvalidTokenError, ValueError).",
+    "Implementation: login: user = app.state.users.get(form.username); stored = user.password_hash if user else DUMMY_HASH; if not verify_password(form.password, stored) or user is None: raise HTTPException(400, ...); return Token(access_token=create_access_token(user.id), token_type=\"bearer\"). get_current_user: user_id = int(decode_access_token(token)[\"sub\"]) inside try, raise credentials_error() in except, then find_user_by_id(request.app.state.users, user_id) and raise credentials_error() if None."
+  ],
+  "evaluation": [
+    "All 14 tests pass",
+    "One generic 400 for both login failures, with equal hashing work",
+    "Every invalid-token path ends in the same 401 with WWW-Authenticate: Bearer",
+    "Responses use UserOut; the password hash never leaves the server"
+  ]
+}

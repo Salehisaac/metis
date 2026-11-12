@@ -1,0 +1,2330 @@
+{
+  "schemaVersion": 1,
+  "path": {
+    "id": "PATH-BE",
+    "title": "Python Backend Engineer",
+    "approved": "2026-11-12",
+    "source": "docs/CURRICULUM.md"
+  },
+  "courses": [
+    {
+      "id": "PY",
+      "title": "Python for Go developers",
+      "status": "LEARN",
+      "reason": "Python semantics at A1 (P1/P2); no Python written. Go background speeds this up.",
+      "modules": [
+        {
+          "id": "PY.M01",
+          "title": "Setup and the feedback loop",
+          "status": "LEARN",
+          "hours": 4,
+          "prereqs": [],
+          "outcomes": [
+            "Create a venv and run scripts",
+            "Run pytest and explain a failing test's output"
+          ],
+          "lessons": [
+            {
+              "id": "PY.M01.L01",
+              "title": "Running Python: interpreter, REPL, scripts, python -m",
+              "authored": true,
+              "exercises": [
+                "PY.M01.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q3",
+                "q4",
+                "q2",
+                "q6"
+              ]
+            },
+            {
+              "id": "PY.M01.L02",
+              "title": "venv and pip: why isolate dependencies",
+              "authored": true,
+              "exercises": [],
+              "quizzes": [
+                "q2",
+                "q3",
+                "q1",
+                "q4",
+                "q6"
+              ]
+            },
+            {
+              "id": "PY.M01.L03",
+              "title": "pytest: reading a test, running it, reading a failure",
+              "authored": true,
+              "exercises": [
+                "PY.M01.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q6",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "PY.M01.L04",
+              "title": "Learner workspace in Git + Git placement check",
+              "authored": true,
+              "exercises": [
+                "PY.M01.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "PY.M02",
+          "title": "Names, objects, mutability",
+          "status": "LEARN",
+          "hours": 5,
+          "prereqs": [
+            "PY.M01"
+          ],
+          "outcomes": [
+            "Predict output for aliasing, mutation vs rebinding and copying (at least 4/5 unseen items)",
+            "Explain it with a diagram"
+          ],
+          "lessons": [
+            {
+              "id": "PY.M02.L01",
+              "title": "Names are labels: is vs ==",
+              "authored": true,
+              "exercises": [
+                "PY.M02.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "PY.M02.L02",
+              "title": "Mutable vs immutable types",
+              "authored": true,
+              "exercises": [
+                "PY.M02.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "PY.M02.L03",
+              "title": "Mutation vs rebinding across calls",
+              "authored": true,
+              "exercises": [
+                "PY.M02.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "PY.M02.L04",
+              "title": "Copies and the mutable-default-argument trap",
+              "authored": true,
+              "exercises": [
+                "PY.M02.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "PY.M03",
+          "title": "Data structures and strings",
+          "status": "LEARN",
+          "hours": 8,
+          "prereqs": [
+            "PY.M02"
+          ],
+          "outcomes": [
+            "Solve 3 unseen problems with slicing, dict/set, sorting with key= (multi-key, tie-break) and string methods"
+          ],
+          "lessons": [
+            {
+              "id": "PY.M03.L01",
+              "title": "Lists and slicing",
+              "authored": true,
+              "exercises": [
+                "PY.M03.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7",
+                "q8"
+              ]
+            },
+            {
+              "id": "PY.M03.L02",
+              "title": "Dicts and sets: counting, grouping, Counter",
+              "authored": true,
+              "exercises": [
+                "PY.M03.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7",
+                "q8"
+              ]
+            },
+            {
+              "id": "PY.M03.L03",
+              "title": "Tuples, unpacking, sorting with key= and tie-breaks",
+              "authored": true,
+              "exercises": [
+                "PY.M03.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7",
+                "q8"
+              ]
+            },
+            {
+              "id": "PY.M03.L04",
+              "title": "Strings: split, join, strip, f-strings",
+              "authored": true,
+              "exercises": [
+                "PY.M03.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7",
+                "q8"
+              ]
+            },
+            {
+              "id": "PY.M03.L05",
+              "title": "Comprehensions",
+              "authored": true,
+              "exercises": [
+                "PY.M03.L05.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "PY.M04",
+          "title": "Functions, errors, writing tests",
+          "status": "LEARN",
+          "hours": 6,
+          "prereqs": [
+            "PY.M03"
+          ],
+          "outcomes": [
+            "Design functions with exceptions (compared with Go errors)",
+            "Write parametrized pytest suites that catch a seeded bug"
+          ],
+          "lessons": [
+            {
+              "id": "PY.M04.L01",
+              "title": "Parameters: positional, keyword, defaults, *args/**kwargs",
+              "authored": true,
+              "exercises": [
+                "PY.M04.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "PY.M04.L02",
+              "title": "Exceptions vs Go error values",
+              "authored": true,
+              "exercises": [
+                "PY.M04.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "PY.M04.L03",
+              "title": "Designing error handling",
+              "authored": true,
+              "exercises": [
+                "PY.M04.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "PY.M04.L04",
+              "title": "Writing your own tests",
+              "authored": true,
+              "exercises": [
+                "PY.M04.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "PY.M05",
+          "title": "Classes, dataclasses, typing",
+          "status": "LEARN",
+          "hours": 8,
+          "prereqs": [
+            "PY.M04"
+          ],
+          "outcomes": [
+            "Model a domain with dataclasses and type hints",
+            "Choose composition vs inheritance and justify it"
+          ],
+          "lessons": [
+            {
+              "id": "PY.M05.L01",
+              "title": "Classes vs Go structs and methods",
+              "authored": true,
+              "exercises": [
+                "PY.M05.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "PY.M05.L02",
+              "title": "dataclasses",
+              "authored": true,
+              "exercises": [
+                "PY.M05.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "PY.M05.L03",
+              "title": "Type hints; Protocol vs Go interfaces",
+              "authored": true,
+              "exercises": [
+                "PY.M05.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "PY.M05.L04",
+              "title": "Composition vs inheritance",
+              "authored": true,
+              "exercises": [
+                "PY.M05.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "PY.M06",
+          "title": "Modules, packages, tooling",
+          "status": "LEARN",
+          "hours": 4,
+          "prereqs": [
+            "PY.M05"
+          ],
+          "outcomes": [
+            "Structure a multi-module package with pyproject.toml",
+            "Code is clean under Ruff"
+          ],
+          "lessons": [
+            {
+              "id": "PY.M06.L01",
+              "title": "Imports, modules, packages, __main__",
+              "authored": true,
+              "exercises": [
+                "PY.M06.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q5",
+                "q3",
+                "q4",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "PY.M06.L02",
+              "title": "pyproject.toml and project layout",
+              "authored": true,
+              "exercises": [
+                "PY.M06.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "PY.M06.L03",
+              "title": "Ruff",
+              "authored": true,
+              "exercises": [
+                "PY.M06.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "PY.M07",
+          "title": "Iterators, generators, context managers, decorators",
+          "status": "LEARN",
+          "hours": 8,
+          "prereqs": [
+            "PY.M05"
+          ],
+          "outcomes": [
+            "Write a generator pipeline, a context manager and a decorator, each with tests"
+          ],
+          "lessons": [
+            {
+              "id": "PY.M07.L01",
+              "title": "Iteration protocol and generators",
+              "authored": true,
+              "exercises": [
+                "PY.M07.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q8",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "PY.M07.L02",
+              "title": "Context managers vs Go defer",
+              "authored": true,
+              "exercises": [
+                "PY.M07.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "PY.M07.L03",
+              "title": "Closures and decorators",
+              "authored": true,
+              "exercises": [
+                "PY.M07.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "PY.M07.L04",
+              "title": "yield-managed resources (FastAPI dependency preview)",
+              "authored": true,
+              "exercises": [
+                "PY.M07.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q7",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        }
+      ]
+    },
+    {
+      "id": "DB",
+      "title": "Databases and SQL",
+      "status": "LEARN",
+      "reason": "Transactions misconception (A0), manual escaping instead of placeholders, JOINs and locking self-reported weak.",
+      "modules": [
+        {
+          "id": "DB.M01",
+          "title": "SQL CRUD, filtering, grouping",
+          "status": "REVIEW",
+          "provisional": true,
+          "hours": 4,
+          "prereqs": [
+            "PY.M04"
+          ],
+          "outcomes": [
+            "Write SELECT with WHERE, GROUP BY, ORDER BY, LIMIT and date filters unaided"
+          ],
+          "lessons": [
+            {
+              "id": "DB.M01.L01",
+              "title": "Placement check, then SELECT: WHERE, ORDER BY, LIMIT",
+              "authored": true,
+              "exercises": [
+                "DB.M01.L01.E1"
+              ],
+              "quizzes": [
+                "p1",
+                "p2",
+                "p3",
+                "p4",
+                "p5",
+                "p6",
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "DB.M01.L02",
+              "title": "Writing rows: INSERT, UPDATE, DELETE and constraints",
+              "authored": true,
+              "exercises": [
+                "DB.M01.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "DB.M01.L03",
+              "title": "Aggregates: COUNT, GROUP BY, HAVING and date ranges",
+              "authored": true,
+              "exercises": [
+                "DB.M01.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "DB.M02",
+          "title": "Relational modeling and JOINs",
+          "status": "LEARN",
+          "hours": 8,
+          "prereqs": [
+            "DB.M01"
+          ],
+          "outcomes": [
+            "Design a normalized messaging schema",
+            "Write INNER/LEFT JOINs and explain the result row count"
+          ],
+          "lessons": [
+            {
+              "id": "DB.M02.L01",
+              "title": "Keys and relationships: designing the messaging schema",
+              "authored": true,
+              "exercises": [
+                "DB.M02.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M02.L02",
+              "title": "INNER JOIN and counting result rows",
+              "authored": true,
+              "exercises": [
+                "DB.M02.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M02.L03",
+              "title": "LEFT JOIN, NULLs and missing rows",
+              "authored": true,
+              "exercises": [
+                "DB.M02.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M02.L04",
+              "title": "Joining three tables: fan-out and one row per group",
+              "authored": true,
+              "exercises": [
+                "DB.M02.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "DB.M03",
+          "title": "Transactions and atomicity",
+          "status": "LEARN",
+          "hours": 6,
+          "prereqs": [
+            "DB.M02"
+          ],
+          "outcomes": [
+            "Explain autocommit and crash behavior",
+            "Wrap multi-step writes and test the rollback"
+          ],
+          "lessons": [
+            {
+              "id": "DB.M03.L01",
+              "title": "Autocommit, crashes and atomic transactions",
+              "authored": true,
+              "exercises": [],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "DB.M03.L02",
+              "title": "Transactions in sqlite3: commit, rollback, with conn: and autocommit",
+              "authored": true,
+              "exercises": [
+                "DB.M03.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "DB.M03.L03",
+              "title": "Testing the rollback",
+              "authored": true,
+              "exercises": [
+                "DB.M03.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "DB.M04",
+          "title": "Safe SQL from Python (sqlite3)",
+          "status": "LEARN",
+          "hours": 5,
+          "prereqs": [
+            "DB.M03",
+            "PY.M05"
+          ],
+          "outcomes": [
+            "Use placeholders everywhere and explain why escaping isn't enough",
+            "Build a tested repository layer"
+          ],
+          "lessons": [
+            {
+              "id": "DB.M04.L01",
+              "title": "Placeholders, and why escaping isn't enough",
+              "authored": true,
+              "exercises": [
+                "DB.M04.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M04.L02",
+              "title": "LIKE patterns, executemany and row factories",
+              "authored": true,
+              "exercises": [
+                "DB.M04.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M04.L03",
+              "title": "A tested repository layer",
+              "authored": true,
+              "exercises": [
+                "DB.M04.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "DB.M05",
+          "title": "Indexes and query plans",
+          "status": "LEARN",
+          "hours": 6,
+          "prereqs": [
+            "DB.M04"
+          ],
+          "outcomes": [
+            "Read EXPLAIN output",
+            "Add an index justified by measurement"
+          ],
+          "lessons": [
+            {
+              "id": "DB.M05.L01",
+              "title": "How SQLite finds rows: scans, B-tree indexes and EXPLAIN QUERY PLAN",
+              "authored": true,
+              "exercises": [
+                "DB.M05.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M05.L02",
+              "title": "Composite and covering indexes: column order matters",
+              "authored": true,
+              "exercises": [
+                "DB.M05.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M05.L03",
+              "title": "Measuring: timeit on generated data, and what indexes cost on writes",
+              "authored": true,
+              "exercises": [
+                "DB.M05.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "DB.M06",
+          "title": "Locking and concurrency",
+          "status": "LEARN",
+          "hours": 6,
+          "prereqs": [
+            "DB.M05"
+          ],
+          "outcomes": [
+            "Explain shared/exclusive locks and isolation levels",
+            "Reproduce and fix a lost update"
+          ],
+          "lessons": [
+            {
+              "id": "DB.M06.L01",
+              "title": "Isolation levels, MVCC and locks: what the database promises",
+              "authored": true,
+              "exercises": [],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M06.L02",
+              "title": "SQLite locking: one writer, busy timeouts and BEGIN IMMEDIATE",
+              "authored": true,
+              "exercises": [
+                "DB.M06.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M06.L03",
+              "title": "Lost updates: reproduce them, then fix them",
+              "authored": true,
+              "exercises": [
+                "DB.M06.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M06.L04",
+              "title": "Optimistic concurrency with a version column",
+              "authored": true,
+              "exercises": [
+                "DB.M06.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "DB.M07",
+          "title": "SQLAlchemy and Alembic migrations",
+          "status": "LEARN",
+          "hours": 10,
+          "prereqs": [
+            "DB.M04",
+            "PY.M07"
+          ],
+          "outcomes": [
+            "Map models and query with sessions",
+            "Write reversible migrations"
+          ],
+          "lessons": [
+            {
+              "id": "DB.M07.L01",
+              "title": "Mapping tables to classes with typed Mapped[] columns",
+              "authored": true,
+              "exercises": [
+                "DB.M07.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M07.L02",
+              "title": "The Session: unit of work and session.begin() transactions",
+              "authored": true,
+              "exercises": [
+                "DB.M07.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M07.L03",
+              "title": "Querying with select(): filters, joins, aggregates and bulk updates",
+              "authored": true,
+              "exercises": [
+                "DB.M07.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M07.L04",
+              "title": "Relationships, the N+1 problem and selectinload",
+              "authored": true,
+              "exercises": [
+                "DB.M07.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M07.L05",
+              "title": "Alembic: autogenerate, upgrade, downgrade and reversible migrations",
+              "authored": true,
+              "exercises": [
+                "DB.M07.L05.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "DB.M08",
+          "title": "PostgreSQL specifics",
+          "status": "LEARN",
+          "hours": 5,
+          "prereqs": [
+            "DB.M07",
+            "OPS.M01"
+          ],
+          "outcomes": [
+            "Run Postgres in Docker",
+            "Use constraints, RETURNING and JSONB where justified"
+          ],
+          "lessons": [
+            {
+              "id": "DB.M08.L01",
+              "title": "Constraints that protect your data, and PostgreSQL in Docker",
+              "authored": true,
+              "exercises": [
+                "DB.M08.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M08.L02",
+              "title": "RETURNING and ON CONFLICT: upserts without races",
+              "authored": true,
+              "exercises": [
+                "DB.M08.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "DB.M08.L03",
+              "title": "JSONB and partial indexes: when they're justified",
+              "authored": true,
+              "exercises": [
+                "DB.M08.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        }
+      ]
+    },
+    {
+      "id": "WEB",
+      "title": "HTTP and FastAPI",
+      "status": "LEARN",
+      "reason": "REST semantics at A2 (APPLY); FastAPI, Pydantic and auth never used (LEARN).",
+      "modules": [
+        {
+          "id": "WEB.M01",
+          "title": "HTTP/REST in practice and FastAPI routing",
+          "status": "APPLY",
+          "hours": 6,
+          "prereqs": [
+            "PY.M07"
+          ],
+          "outcomes": [
+            "Build endpoints with correct methods, status codes and error bodies"
+          ],
+          "lessons": [
+            {
+              "id": "WEB.M01.L01",
+              "title": "Path operations: path and query parameters",
+              "authored": true,
+              "exercises": [
+                "WEB.M01.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "WEB.M01.L02",
+              "title": "Methods and status codes in FastAPI",
+              "authored": true,
+              "exercises": [
+                "WEB.M01.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "WEB.M01.L03",
+              "title": "Error responses and debugging endpoints",
+              "authored": true,
+              "exercises": [
+                "WEB.M01.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "WEB.M02",
+          "title": "Pydantic validation and error responses",
+          "status": "LEARN",
+          "hours": 6,
+          "prereqs": [
+            "WEB.M01"
+          ],
+          "outcomes": [
+            "Validate input and output with models",
+            "Consistent 4xx error format"
+          ],
+          "lessons": [
+            {
+              "id": "WEB.M02.L01",
+              "title": "Pydantic models: parsing, coercion and ValidationError",
+              "authored": true,
+              "exercises": [
+                "WEB.M02.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "WEB.M02.L02",
+              "title": "Field constraints and custom validators",
+              "authored": true,
+              "exercises": [
+                "WEB.M02.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "WEB.M02.L03",
+              "title": "Request and response models",
+              "authored": true,
+              "exercises": [
+                "WEB.M02.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "WEB.M02.L04",
+              "title": "Consistent error responses: exception handlers, 422 vs 400",
+              "authored": true,
+              "exercises": [
+                "WEB.M02.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "WEB.M03",
+          "title": "Dependency injection and app structure",
+          "status": "LEARN",
+          "hours": 6,
+          "prereqs": [
+            "WEB.M02"
+          ],
+          "outcomes": [
+            "Use Depends for config, DB session and current user",
+            "Split routers and services"
+          ],
+          "lessons": [
+            {
+              "id": "WEB.M03.L01",
+              "title": "Depends: shared parameters, sub-dependencies and settings",
+              "authored": true,
+              "exercises": [
+                "WEB.M03.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "WEB.M03.L02",
+              "title": "Request-scoped resources and the current user",
+              "authored": true,
+              "exercises": [
+                "WEB.M03.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7"
+              ]
+            },
+            {
+              "id": "WEB.M03.L03",
+              "title": "Splitting the app: APIRouter, services and repositories",
+              "authored": true,
+              "exercises": [
+                "WEB.M03.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "WEB.M04",
+          "title": "Testing APIs (TestClient)",
+          "status": "APPLY",
+          "hours": 5,
+          "prereqs": [
+            "WEB.M03"
+          ],
+          "outcomes": [
+            "Test normal, invalid, edge and error paths for every endpoint"
+          ],
+          "lessons": [
+            {
+              "id": "WEB.M04.L01",
+              "title": "TestClient tests: arrange, act, assert",
+              "authored": true,
+              "exercises": [
+                "WEB.M04.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "WEB.M04.L02",
+              "title": "Fixtures for app and client, and dependency_overrides",
+              "authored": true,
+              "exercises": [
+                "WEB.M04.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "WEB.M04.L03",
+              "title": "Every path: parametrized status codes and error paths",
+              "authored": true,
+              "exercises": [
+                "WEB.M04.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "WEB.M05",
+          "title": "Database in FastAPI",
+          "status": "LEARN",
+          "hours": 8,
+          "prereqs": [
+            "WEB.M04",
+            "DB.M07"
+          ],
+          "outcomes": [
+            "One transaction per unit of work",
+            "No leaked sessions",
+            "Integration tests against a test DB"
+          ],
+          "lessons": [
+            {
+              "id": "WEB.M05.L01",
+              "title": "A session per request: the yield dependency",
+              "authored": true,
+              "exercises": [
+                "WEB.M05.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "WEB.M05.L02",
+              "title": "One transaction per unit of work",
+              "authored": true,
+              "exercises": [
+                "WEB.M05.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "WEB.M05.L03",
+              "title": "A test database: SQLite in memory or in a temp file",
+              "authored": true,
+              "exercises": [
+                "WEB.M05.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "WEB.M05.L04",
+              "title": "Testing failure paths: rollback and leaked connections",
+              "authored": true,
+              "exercises": [
+                "WEB.M05.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "WEB.M06",
+          "title": "Authentication and authorization",
+          "status": "LEARN",
+          "provisional": true,
+          "hours": 8,
+          "prereqs": [
+            "WEB.M05"
+          ],
+          "outcomes": [
+            "Password hashing, token auth, role checks",
+            "Tests for 401 and 403"
+          ],
+          "lessons": [
+            {
+              "id": "WEB.M06.L01",
+              "title": "Password hashing: salt, slow hashes, constant-time checks",
+              "authored": true,
+              "exercises": [
+                "WEB.M06.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "WEB.M06.L02",
+              "title": "JWT access tokens: sign, verify, expire",
+              "authored": true,
+              "exercises": [
+                "WEB.M06.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "WEB.M06.L03",
+              "title": "Login and the current user: OAuth2PasswordBearer",
+              "authored": true,
+              "exercises": [
+                "WEB.M06.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q7",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "WEB.M06.L04",
+              "title": "Authorization: roles, ownership, 401 vs 403",
+              "authored": true,
+              "exercises": [
+                "WEB.M06.L04.E1",
+                "WEB.M06.L04.E2"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        }
+      ]
+    },
+    {
+      "id": "AS",
+      "title": "Async Python",
+      "status": "LEARN",
+      "reason": "Thinks await starts a thread (A0). Prerequisite for async FastAPI.",
+      "modules": [
+        {
+          "id": "AS.M01",
+          "title": "Event loop and coroutines vs goroutines",
+          "status": "LEARN",
+          "hours": 5,
+          "prereqs": [
+            "PY.M07"
+          ],
+          "outcomes": [
+            "Explain what await does and why blocking calls stall the loop"
+          ],
+          "lessons": [
+            {
+              "id": "AS.M01.L01",
+              "title": "Coroutines and await: what really happens (no threads)",
+              "authored": true,
+              "exercises": [
+                "AS.M01.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "AS.M01.L02",
+              "title": "One thread, cooperative scheduling: asyncio vs goroutines",
+              "authored": true,
+              "exercises": [
+                "AS.M01.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "AS.M01.L03",
+              "title": "Blocking calls and CPU work: asyncio.to_thread and executors",
+              "authored": true,
+              "exercises": [
+                "AS.M01.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "AS.M02",
+          "title": "asyncio: tasks, gather, timeouts, cancellation",
+          "status": "LEARN",
+          "hours": 6,
+          "prereqs": [
+            "AS.M01"
+          ],
+          "outcomes": [
+            "Run concurrent I/O with timeouts and handle cancellation correctly"
+          ],
+          "lessons": [
+            {
+              "id": "AS.M02.L01",
+              "title": "Tasks, gather and TaskGroup: running I/O concurrently",
+              "authored": true,
+              "exercises": [
+                "AS.M02.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "AS.M02.L02",
+              "title": "When tasks fail: gather vs TaskGroup error semantics",
+              "authored": true,
+              "exercises": [
+                "AS.M02.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "AS.M02.L03",
+              "title": "Timeouts and cancellation",
+              "authored": true,
+              "exercises": [
+                "AS.M02.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "AS.M02.L04",
+              "title": "Bounded concurrency: semaphores vs Go worker pools",
+              "authored": true,
+              "exercises": [
+                "AS.M02.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "AS.M03",
+          "title": "Async FastAPI and async DB",
+          "status": "LEARN",
+          "hours": 6,
+          "prereqs": [
+            "AS.M02",
+            "WEB.M05"
+          ],
+          "outcomes": [
+            "Choose async def vs def endpoints correctly",
+            "Use an async DB session"
+          ],
+          "lessons": [
+            {
+              "id": "AS.M03.L01",
+              "title": "async def vs def endpoints: the threadpool and the blocked loop",
+              "authored": true,
+              "exercises": [
+                "AS.M03.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "AS.M03.L02",
+              "title": "Testing async apps: AnyIO pytest plugin and httpx.AsyncClient",
+              "authored": true,
+              "exercises": [
+                "AS.M03.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "AS.M03.L03",
+              "title": "Async database access: a connection per request with aiosqlite (and async SQLAlchemy)",
+              "authored": true,
+              "exercises": [
+                "AS.M03.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        }
+      ]
+    },
+    {
+      "id": "ARCH",
+      "title": "Architecture and design",
+      "status": "APPLY",
+      "reason": "Design instincts at A2 (queues, cache invalidation), but has never designed a system unaided. Goal 2.",
+      "modules": [
+        {
+          "id": "ARCH.M01",
+          "title": "Layering and boundaries",
+          "status": "APPLY",
+          "hours": 5,
+          "prereqs": [
+            "WEB.M05"
+          ],
+          "outcomes": [
+            "Separate API, service and repository layers",
+            "Decide where transactions live and justify it"
+          ],
+          "lessons": [
+            {
+              "id": "ARCH.M01.L01",
+              "title": "API, service and repository layers",
+              "authored": true,
+              "exercises": [
+                "ARCH.M01.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "ARCH.M01.L02",
+              "title": "Where transactions live: the unit of work",
+              "authored": true,
+              "exercises": [
+                "ARCH.M01.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "ARCH.M01.L03",
+              "title": "Protocols, fakes and what not to abstract",
+              "authored": true,
+              "exercises": [
+                "ARCH.M01.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "ARCH.M02",
+          "title": "Caching with Redis",
+          "status": "APPLY",
+          "hours": 6,
+          "prereqs": [
+            "ARCH.M01"
+          ],
+          "outcomes": [
+            "Implement cache-aside with invalidation",
+            "Reason about stale reads"
+          ],
+          "lessons": [
+            {
+              "id": "ARCH.M02.L01",
+              "title": "Cache-aside reads with TTL",
+              "authored": true,
+              "exercises": [
+                "ARCH.M02.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "ARCH.M02.L02",
+              "title": "Invalidation after commit and stale reads",
+              "authored": true,
+              "exercises": [
+                "ARCH.M02.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "ARCH.M02.L03",
+              "title": "Thundering herds and negative caching",
+              "authored": true,
+              "exercises": [
+                "ARCH.M02.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "ARCH.M03",
+          "title": "Background work and queues",
+          "status": "APPLY",
+          "hours": 6,
+          "prereqs": [
+            "ARCH.M02",
+            "AS.M02"
+          ],
+          "outcomes": [
+            "Move slow side effects to a worker",
+            "Handle retries and idempotency"
+          ],
+          "lessons": [
+            {
+              "id": "ARCH.M03.L01",
+              "title": "Off the request path: BackgroundTasks vs a durable queue",
+              "authored": true,
+              "exercises": [
+                "ARCH.M03.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "ARCH.M03.L02",
+              "title": "The transactional outbox",
+              "authored": true,
+              "exercises": [
+                "ARCH.M03.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "ARCH.M03.L03",
+              "title": "Idempotent consumers, retries and backoff",
+              "authored": true,
+              "exercises": [
+                "ARCH.M03.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "ARCH.M04",
+          "title": "Designing from scratch",
+          "status": "APPLY",
+          "hours": 8,
+          "prereqs": [
+            "ARCH.M03"
+          ],
+          "outcomes": [
+            "Write a design doc (requirements, data model, API, trade-offs) and defend it in review"
+          ],
+          "lessons": [
+            {
+              "id": "ARCH.M04.L01",
+              "title": "Requirements, scope and numbers",
+              "authored": true,
+              "exercises": [
+                "ARCH.M04.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "ARCH.M04.L02",
+              "title": "Data model and API from requirements",
+              "authored": true,
+              "exercises": [
+                "ARCH.M04.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "ARCH.M04.L03",
+              "title": "Trade-offs, failure modes and decision records",
+              "authored": true,
+              "exercises": [
+                "ARCH.M04.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            },
+            {
+              "id": "ARCH.M04.L04",
+              "title": "Writing and defending a design doc",
+              "authored": true,
+              "exercises": [
+                "ARCH.M04.L04.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4"
+              ]
+            }
+          ],
+          "assessment": true
+        }
+      ]
+    },
+    {
+      "id": "OPS",
+      "title": "Production basics",
+      "status": "LEARN",
+      "reason": "Has never written a Dockerfile, CI or production config. Docker gets a placement check.",
+      "modules": [
+        {
+          "id": "OPS.M01",
+          "title": "Docker authoring",
+          "status": "LEARN",
+          "provisional": true,
+          "hours": 6,
+          "prereqs": [
+            "WEB.M05"
+          ],
+          "outcomes": [
+            "Write a Dockerfile and a compose file for app, DB and Redis"
+          ],
+          "lessons": [
+            {
+              "id": "OPS.M01.L01",
+              "title": "Placement check and a first Dockerfile for FastAPI",
+              "authored": true,
+              "exercises": [
+                "OPS.M01.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "q7",
+                "q8",
+                "q9",
+                "q10"
+              ]
+            },
+            {
+              "id": "OPS.M01.L02",
+              "title": "Layer caching, .dockerignore, multi-stage builds and HEALTHCHECK",
+              "authored": true,
+              "exercises": [
+                "OPS.M01.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "OPS.M01.L03",
+              "title": "Compose: app, Postgres and Redis with healthchecks",
+              "authored": true,
+              "exercises": [
+                "OPS.M01.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "OPS.M02",
+          "title": "Config, logging, error reporting",
+          "status": "LEARN",
+          "hours": 4,
+          "prereqs": [
+            "OPS.M01"
+          ],
+          "outcomes": [
+            "12-factor config, structured logs, no secrets in code"
+          ],
+          "lessons": [
+            {
+              "id": "OPS.M02.L01",
+              "title": "Configuration from the environment: 12-factor and secrets",
+              "authored": true,
+              "exercises": [
+                "OPS.M02.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6"
+              ]
+            },
+            {
+              "id": "OPS.M02.L02",
+              "title": "Logging: logger hierarchy, levels and JSON logs",
+              "authored": true,
+              "exercises": [
+                "OPS.M02.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "OPS.M02.L03",
+              "title": "Error reporting in FastAPI: request IDs and exception handlers",
+              "authored": true,
+              "exercises": [
+                "OPS.M02.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        },
+        {
+          "id": "OPS.M03",
+          "title": "CI",
+          "status": "LEARN",
+          "hours": 4,
+          "prereqs": [
+            "OPS.M02"
+          ],
+          "outcomes": [
+            "Pipeline runs Ruff and pytest on every push"
+          ],
+          "lessons": [
+            {
+              "id": "OPS.M03.L01",
+              "title": "Ruff: lint and format checks for CI",
+              "authored": true,
+              "exercises": [
+                "OPS.M03.L01.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "OPS.M03.L02",
+              "title": "GitHub Actions: a workflow that runs Ruff and pytest",
+              "authored": true,
+              "exercises": [
+                "OPS.M03.L02.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            },
+            {
+              "id": "OPS.M03.L03",
+              "title": "GitLab CI: .gitlab-ci.yml, caching and CI secrets",
+              "authored": true,
+              "exercises": [
+                "OPS.M03.L03.E1"
+              ],
+              "quizzes": [
+                "q1",
+                "q2",
+                "q3",
+                "q4",
+                "q5"
+              ]
+            }
+          ],
+          "assessment": true
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "PRJ-01",
+      "title": "Chat Export Analyzer (CLI)",
+      "after": [
+        "PY.M04"
+      ],
+      "hours": 10,
+      "specified": true
+    },
+    {
+      "id": "PRJ-02",
+      "title": "Message store library on SQLite",
+      "after": [
+        "DB.M04"
+      ],
+      "hours": 12,
+      "specified": true
+    },
+    {
+      "id": "PRJ-03",
+      "title": "Mini messenger REST API",
+      "after": [
+        "WEB.M06"
+      ],
+      "hours": 25,
+      "specified": true
+    },
+    {
+      "id": "PRJ-04",
+      "title": "Production-style messenger",
+      "after": [
+        "AS.M03",
+        "ARCH.M03",
+        "OPS.M03"
+      ],
+      "hours": 25,
+      "specified": true
+    },
+    {
+      "id": "PRJ-05",
+      "title": "Capstone: a system you design",
+      "after": [
+        "ARCH.M04",
+        "DB.M08"
+      ],
+      "hours": 30,
+      "specified": true
+    }
+  ],
+  "sequence": [
+    "PY.M01",
+    "PY.M02",
+    "PY.M03",
+    "PY.M04",
+    "PRJ-01",
+    "PY.M05",
+    "DB.M01",
+    "DB.M02",
+    "DB.M03",
+    "DB.M04",
+    "PRJ-02",
+    "PY.M06",
+    "PY.M07",
+    "WEB.M01",
+    "WEB.M02",
+    "WEB.M03",
+    "WEB.M04",
+    "DB.M07",
+    "WEB.M05",
+    "WEB.M06",
+    "PRJ-03",
+    "AS.M01",
+    "AS.M02",
+    "AS.M03",
+    "ARCH.M01",
+    "ARCH.M02",
+    "ARCH.M03",
+    "DB.M05",
+    "DB.M06",
+    "OPS.M01",
+    "OPS.M02",
+    "OPS.M03",
+    "PRJ-04",
+    "DB.M08",
+    "ARCH.M04",
+    "PRJ-05"
+  ]
+}

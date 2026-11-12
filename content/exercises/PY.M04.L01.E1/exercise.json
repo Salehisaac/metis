@@ -1,0 +1,47 @@
+{
+  "id": "PY.M04.L01.E1",
+  "lesson": "PY.M04.L01",
+  "title": "Design the signature of log_line()",
+  "problem": "Write log_line(), which builds one structured log line such as `12:00:01 INFO user logged in ip=10.0.0.1 user=ada`. The starter has a placeholder signature `(*args, **kwargs)`: the main job is to replace it with a real signature, so Python itself rejects bad calls with TypeError.",
+  "requirements": [
+    "The first parameter is the level (required). It is uppercased in the output",
+    "Then any number of positional message words, joined with single spaces after the level",
+    "An optional timestamp `ts`, keyword-only, default None. When given, it comes first in the line",
+    "Any other keyword arguments are fields, written as key=value after the words, sorted by key",
+    "Field values are converted with str(); a value containing a space is wrapped in double quotes",
+    "Calling without a level, or passing the level twice, raises TypeError. Let Python raise it: don't check by hand"
+  ],
+  "contract": "log_line(level, *words, ts=None, **fields) -> str",
+  "expectedBehavior": "log_line('info', 'user', 'logged', 'in') == 'INFO user logged in'; log_line('warn', 'disk', 'full', ts='12:00:01') == '12:00:01 WARN disk full'; log_line('info', 'login', user='ada', ip='10.0.0.1') == 'INFO login ip=10.0.0.1 user=ada'",
+  "edgeCases": [
+    "Only a level, with no words and no fields",
+    "ts=None passed explicitly means no timestamp",
+    "A third positional argument is a word, never the timestamp",
+    "Fields supplied by unpacking a dict with **",
+    "Non-string field values (int, bool)",
+    "Field values containing a space"
+  ],
+  "tests": [
+    "test_level_and_words",
+    "test_level_only",
+    "test_fields_sorted_by_key",
+    "test_field_values_become_strings",
+    "test_value_with_space_is_quoted",
+    "test_ts_goes_first",
+    "test_ts_none_means_no_timestamp",
+    "test_ts_is_keyword_only",
+    "test_fields_from_a_dict",
+    "test_missing_level_is_type_error",
+    "test_level_twice_is_type_error"
+  ],
+  "hints": [
+    "Conceptual: in a def, the order is: ordinary parameters, then *name, then keyword-only parameters, then **name. Anything written after *name can only be passed by keyword. That's what makes ts keyword-only for free.",
+    "Specific: the two TypeError tests pass by themselves once the signature is right, because Python checks the call before your body runs. For the fields, sorted() on a dict gives its keys in order.",
+    "Implementation: build a list of strings: the level uppercased, then the words. Put ts at the front if it isn't None. Loop over the sorted field names, format each as key=value (quoting values that contain a space), and finish with ' '.join(...)."
+  ],
+  "evaluation": [
+    "All 11 tests pass",
+    "The signature does the validation: no manual checks of args/kwargs, no len(args)",
+    "ts is compared with `is not None`, not by truthiness"
+  ]
+}

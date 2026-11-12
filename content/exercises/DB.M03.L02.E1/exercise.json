@@ -1,0 +1,44 @@
+{
+  "id": "DB.M03.L02.E1",
+  "lesson": "DB.M03.L02",
+  "title": "Make create_group_chat all-or-nothing",
+  "problem": "create_group_chat inserts a chat, its memberships and a first message, and commits after every step. When one member id is unknown, the caller gets an IntegrityError, but the chat and the earlier memberships are already committed: a half-created group. Refactor it so the whole operation is one transaction, and so repeated ids don't break it.",
+  "requirements": [
+    "Edit only groups.py; keep the function's signature and return value",
+    "All writes of one call happen in one transaction: committed together on success, rolled back together on any exception",
+    "The exception still reaches the caller (don't swallow it)",
+    "After a failure, no transaction is left open on the connection and the connection can be used again",
+    "Each user becomes a member once, even if listed twice or if the creator is also in member_ids",
+    "A blank title raises ValueError before anything is written"
+  ],
+  "contract": "create_group_chat(conn: sqlite3.Connection, title: str, creator_id: int, member_ids: list[int], now: str) -> int   # the new chat's id; conn uses the default transaction mode",
+  "expectedBehavior": "create_group_chat(conn, 'weekend', 1, [2, 3], NOW) returns 5 and another connection sees the chat, 3 memberships and the message; with member_ids [2, 999] it raises sqlite3.IntegrityError and every table looks exactly as before, on both connections",
+  "edgeCases": [
+    "Unknown member id after valid ones: nothing written, error raised",
+    "Unknown creator id: nothing written",
+    "member_ids repeats an id or contains the creator",
+    "member_ids is empty: a chat with just the creator",
+    "Title with surrounding spaces is stored stripped; a blank title writes nothing",
+    "A successful call right after a failed one works and is committed"
+  ],
+  "tests": [
+    "test_creates_chat_members_and_first_message",
+    "test_title_is_stripped",
+    "test_repeated_ids_are_added_once",
+    "test_unknown_member_leaves_nothing_behind",
+    "test_unknown_creator_leaves_nothing_behind",
+    "test_blank_title_writes_nothing",
+    "test_connection_still_works_after_a_failure"
+  ],
+  "hints": [
+    "Conceptual: every conn.commit() in the middle is a point after which a later failure can no longer be undone. An atomic operation commits exactly once, at the end, and rolls back if anything before that raises.",
+    "Specific: remove the intermediate commits and put all the INSERTs inside one `with conn:` block. It commits when the block finishes normally and rolls back (then re-raises) when anything inside raises. For duplicates, build the list of people without repeats before the transaction.",
+    "Implementation: people = dict.fromkeys([creator_id, *member_ids]) keeps the first occurrence of each id, in order. Then: with conn: insert the chat, loop over people inserting memberships, insert the message. Return chat_id after the block."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "Exactly one transaction per call, with no commit() in the middle",
+    "Errors propagate to the caller; nothing catches and hides them",
+    "Validation that needs no database happens before the transaction starts"
+  ]
+}

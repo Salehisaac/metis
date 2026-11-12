@@ -1,0 +1,44 @@
+{
+  "id": "ARCH.M01.L03.E1",
+  "lesson": "ARCH.M01.L03",
+  "title": "A fake repository that keeps the contract",
+  "problem": "users.py has a UserRepo Protocol, the real SqliteUserRepo and a signup service. Write InMemoryUserRepo in fakes.py so service tests can run without a database. A fake is only useful if it behaves like the real thing: the same contract checks run against both, and the real repository already passes them.",
+  "requirements": [
+    "InMemoryUserRepo has add(email, name) -> int and get_by_email(email) -> dict | None, so it satisfies UserRepo",
+    "ids start at 1 and count up; a failed add doesn't use up an id",
+    "Email lookups and the duplicate check ignore case, but the stored email keeps its original spelling",
+    "A duplicate email (in any case) raises users.DuplicateEmail",
+    "get_by_email returns a new dict each time, so callers can't change stored data",
+    "Don't change users.py"
+  ],
+  "contract": "InMemoryUserRepo().add(email: str, name: str) -> int   # raises DuplicateEmail\nInMemoryUserRepo().get_by_email(email: str) -> {\"id\": int, \"email\": str, \"name\": str} | None",
+  "expectedBehavior": "repo.add('Ana@X.io', 'Ana') returns 1; repo.get_by_email('ana@x.io') returns {'id': 1, 'email': 'Ana@X.io', 'name': 'Ana'}; repo.add('ANA@x.io', 'Other') raises DuplicateEmail; the next successful add returns 2.",
+  "edgeCases": [
+    "Lookup with different capitalisation than the stored email",
+    "Duplicate that differs only in case",
+    "The id counter after a rejected duplicate",
+    "Caller mutates the returned dict (aliasing)",
+    "Unknown email returns None, not an exception"
+  ],
+  "tests": [
+    "test_contract_matches_the_real_repo",
+    "test_fake_ids_count_up",
+    "test_fake_get_returns_the_user",
+    "test_fake_lookup_ignores_case_but_keeps_original",
+    "test_fake_missing_is_none",
+    "test_fake_duplicate_any_case_raises",
+    "test_fake_returned_dict_is_a_copy",
+    "test_fake_satisfies_protocol",
+    "test_signup_service_with_fake"
+  ],
+  "hints": [
+    "Conceptual: the real repository is the specification. Read SqliteUserRepo: COLLATE NOCASE means comparisons ignore case, UNIQUE means duplicates fail, and each query builds a fresh dict. Your fake has to reproduce all three.",
+    "Specific: keep one dict keyed by email.lower(), storing the user dict with the original email. Check for the key before you hand out an id, so a duplicate doesn't consume one.",
+    "Implementation: in add, compute key = email.lower(); if key in the dict, raise DuplicateEmail(email); otherwise take self._next_id, increment it, store {'id': ..., 'email': email, 'name': name}. In get_by_email, return dict(stored) or None."
+  ],
+  "evaluation": [
+    "All 9 tests pass, and test_contract_matches_the_real_repo still passes (the checks describe the real behaviour)",
+    "No inheritance from UserRepo is needed: it matches structurally",
+    "The fake stays small: no SQL parsing, no features the real repository doesn't have"
+  ]
+}

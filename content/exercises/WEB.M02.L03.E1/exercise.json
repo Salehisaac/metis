@@ -1,0 +1,46 @@
+{
+  "id": "WEB.M02.L03.E1",
+  "lesson": "WEB.M02.L03",
+  "title": "Stop a users API from leaking: separate input, output and patch models",
+  "problem": "users_api.py works, but it uses one User model for everything and returns stored records as they are. Every response leaks the email, the password hash and is_admin, and PATCH needs every field and overwrites the rest. Refactor it with separate models so each endpoint accepts and returns exactly what the contract says. Don't change how records are stored.",
+  "requirements": [
+    "POST /users accepts username, email, password, display_name (required) and bio (optional); stores the hash, never the password; answers 201",
+    "Every response (POST, GET, PATCH) contains exactly id, username, display_name, bio",
+    "PATCH /users/{id} accepts only display_name and/or bio; fields not sent stay unchanged; {} changes nothing",
+    "PATCH with \"bio\": null clears the bio",
+    "PATCH with display_name null or \"\" is 422 at loc [\"body\", \"display_name\"], and nothing changes",
+    "PATCH with any other field (is_admin, username, password_hash, typos) is 422 extra_forbidden",
+    "GET /users/{user_id} declares its output model, so /openapi.json documents only the four public fields"
+  ],
+  "contract": "POST /users -> 201 UserPublic | 422; GET /users/{id} -> 200 UserPublic | 404; PATCH /users/{id} -> 200 UserPublic | 404 | 422; UserPublic = {id, username, display_name, bio}",
+  "expectedBehavior": "PATCH {\"bio\": \"backend dev\"} then PATCH {\"display_name\": \"Sara K\"} -> {\"id\": 1, \"username\": \"sara\", \"display_name\": \"Sara K\", \"bio\": \"backend dev\"}; PATCH {\"is_admin\": true} -> 422",
+  "edgeCases": [
+    "Absent field vs explicit null in a PATCH",
+    "display_name: null must not reach storage, or every later response breaks",
+    "Fields added to storage later must stay hidden without code changes",
+    "Unknown PATCH fields must be an error, not a silent no-op"
+  ],
+  "tests": [
+    "test_create_returns_only_public_fields",
+    "test_password_is_stored_hashed_but_never_returned",
+    "test_read_returns_public_view",
+    "test_create_requires_all_signup_fields",
+    "test_patch_changes_only_sent_fields",
+    "test_patch_with_empty_body_changes_nothing",
+    "test_patch_null_bio_clears_it",
+    "test_patch_rejects_null_or_empty_display_name",
+    "test_patch_cannot_touch_protected_or_unknown_fields",
+    "test_openapi_documents_the_public_model"
+  ],
+  "hints": [
+    "Conceptual: you need three models: what a client may send on create, what any client may see, and what a client may change. Each endpoint uses one for its body and one for its output.",
+    "Specific: put response_model=<public model> on all three decorators. The patch model forbids extras, has both fields optional, and the route applies body.model_dump(exclude_unset=True).",
+    "Implementation: in the patch model, display_name: str | None = Field(default=None, min_length=1), plus a @field_validator(\"display_name\") classmethod that raises ValueError when the value is None and otherwise returns it."
+  ],
+  "evaluation": [
+    "All ten tests pass",
+    "Output is an allowlist (a response model), not fields deleted by hand",
+    "PATCH uses exclude_unset and validates before anything is stored",
+    "Storage format is unchanged"
+  ]
+}

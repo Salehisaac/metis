@@ -1,0 +1,46 @@
+{
+  "id": "ARCH.M04.L03.E1",
+  "lesson": "ARCH.M04.L03",
+  "title": "Availability that degrades instead of failing",
+  "problem": "The design's failure-mode table says: 'Redis down: availability is served from the database, slower, and the page still works.' Implement that row. free_slots computes a room's free 15-minute slots from its bookings; get_availability caches the result for 30 s and falls back to the database when Redis fails, reporting where the answer came from.",
+  "requirements": [
+    "free_slots returns slot start times from open_ts in steps of slot, only slots that end by close_ts, skipping any slot that overlaps a booking (half-open)",
+    "Bookings can be unsorted, overlap each other, or extend past the window",
+    "get_availability: hit returns (cached list, 'cache'); miss computes, stores JSON with ex=AVAIL_TTL and returns (slots, 'db')",
+    "A redis.RedisError on the cache read or write is logged as a warning on the 'availability' logger and the answer comes from the database with source 'db-degraded'",
+    "Errors from load_bookings propagate",
+    "An empty list (fully booked) is a valid cached value"
+  ],
+  "contract": "free_slots(bookings: list[tuple[int, int]], open_ts: int, close_ts: int, slot: int = SLOT) -> list[int]\nget_availability(r, load_bookings, room_id: int, open_ts: int, close_ts: int) -> tuple[list[int], str]",
+  "expectedBehavior": "With one booking 09:00-10:00 in a 09:00-11:00 window, the first call returns ([10:00, 10:15, 10:30, 10:45], 'db') and the second returns the same list with 'cache'. With Redis disconnected, the call returns the full list of free slots with 'db-degraded' and logs a warning.",
+  "edgeCases": [
+    "A booking that ends exactly when a slot starts doesn't block it",
+    "A booking that covers part of a slot blocks the whole slot",
+    "A window that isn't a whole number of slots: the last partial slot is not offered",
+    "Fully booked day: [] must be cached and recognised as a hit",
+    "Redis fails only on SET (read worked): still answer, report 'db-degraded'",
+    "Redis down and database down: the database error wins"
+  ],
+  "tests": [
+    "test_free_slots_empty_day",
+    "test_free_slots_skips_overlapping_slots",
+    "test_free_slots_messy_bookings",
+    "test_free_slots_touching_and_partial_window",
+    "test_miss_then_hit",
+    "test_fully_booked_day_is_cached_too",
+    "test_redis_down_degrades_to_database",
+    "test_redis_write_failure_degrades",
+    "test_database_errors_propagate"
+  ],
+  "hints": [
+    "Conceptual: the cache is an optimisation, so losing it must cost speed, not correctness. Only the database is required for an answer. That tells you which exceptions to catch (Redis's) and which must escape (the loader's).",
+    "Specific: free_slots is a loop over slot starts while start + slot <= close_ts, using the half-open overlap test from L02 against every booking. In get_availability, wrap r.get and r.set in separate try/except redis.RedisError blocks and remember in a flag whether either failed.",
+    "Implementation: key = availability_key(room_id, open_ts); try cached = r.get(key) and return (json.loads(cached), 'cache') if it's not None; except RedisError: log.warning(...) and set degraded. Then slots = free_slots(load_bookings(...), open_ts, close_ts). If Redis worked so far, try r.set(key, json.dumps(slots), ex=AVAIL_TTL), except RedisError: warn and set degraded. Return slots with 'db-degraded' or 'db'."
+  ],
+  "evaluation": [
+    "All 9 tests pass",
+    "Only redis.RedisError is caught; loader errors are never hidden",
+    "Every degraded answer leaves a warning in the log",
+    "free_slots is a pure function with no I/O"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "AS.M01.L01.E1",
+  "lesson": "AS.M01.L01",
+  "title": "Debug: the cart that forgot to await",
+  "problem": "cart.py totals a shopping cart by asking two async services (in_stock and price_of). cart_total and checkout_message crash or return wrong answers. The service functions are correct. Find and fix the bugs without changing the service functions and without making anything synchronous.",
+  "requirements": [
+    "cart_total(skus) returns the sum of price_of(sku) for every sku that is in stock, skipping the others",
+    "checkout_message(skus) returns 'Total: N', or 'Nothing to ship' when the total is 0",
+    "cart_total and checkout_message stay async def",
+    "Don't change in_stock, price_of, STOCK or PRICES"
+  ],
+  "contract": "async def cart_total(skus: list[str]) -> int\nasync def checkout_message(skus: list[str]) -> str",
+  "expectedBehavior": "asyncio.run(cart_total(['tea', 'mug', 'tea'])) == 8 (mug is out of stock); asyncio.run(checkout_message(['mug'])) == 'Nothing to ship'",
+  "edgeCases": [
+    "Empty cart: total 0",
+    "Out-of-stock sku (mug) is skipped, not charged",
+    "Unknown sku is treated as out of stock",
+    "The same sku twice is charged twice"
+  ],
+  "tests": [
+    "test_total_of_items_in_stock",
+    "test_out_of_stock_items_are_skipped",
+    "test_empty_cart_totals_zero",
+    "test_unknown_sku_is_skipped",
+    "test_message_with_total",
+    "test_message_when_nothing_ships",
+    "test_functions_stay_async"
+  ],
+  "hints": [
+    "Conceptual: calling an async def function never runs it. It returns a coroutine object, and a coroutine object is truthy and can't be added to an int.",
+    "Specific: there are three places where a coroutine function is called but its result is used as if it were the value. Look for the RuntimeWarning 'was never awaited' in pytest's output: it names them.",
+    "Implementation: put await in front of each call to an async function whose value you need: the stock check, the price lookup, and the cart_total call inside checkout_message."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "No 'coroutine ... was never awaited' warnings remain in the pytest output",
+    "Each fix is an added await, not a rewrite into synchronous code",
+    "The learner can say why `if in_stock(sku):` was always true"
+  ]
+}

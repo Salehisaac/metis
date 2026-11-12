@@ -1,0 +1,58 @@
+{
+  "id": "WEB.M06.L04.E1",
+  "lesson": "WEB.M06.L04",
+  "title": "Add the missing authorization to the moderation endpoints",
+  "problem": "Every endpoint in app.py checks who you are (a valid token), but none checks what you may do: any account can ban anyone, and anyone can read or delete messages in any chat. Implement require_role and the rules in the module docstring: role checks as a dependency, a moderator/admin rule for bans, and object-level checks for chats and messages.",
+  "requirements": [
+    "Edit only app.py. Don't change security.py, conftest.py or test_authz.py",
+    "require_role(*roles) returns a dependency that raises 403 \"Not enough permissions\" when the current user's role isn't in roles",
+    "ban_user uses require_role(\"moderator\", \"admin\") in its signature; moderators may ban only role \"user\", admins anyone but themselves (403 \"Not enough permissions\" otherwise)",
+    "list_messages and delete_message answer 404 \"chat not found\" to anyone who isn't a member of the chat or an admin",
+    "delete_message answers 403 to a member who isn't the author (admins may delete any message)",
+    "Keep authentication as it is: no or bad token is 401"
+  ],
+  "contract": "require_role(*roles: str) -> dependency returning User; endpoints and status codes as in the module docstring",
+  "expectedBehavior": "Anonymous requests get 401; an ordinary user banning gets 403; a moderator bans sara (200) but not mod2 or root (403); a non-member gets 404 for chat 1 whether or not it exists; sara can't delete ali's message (403), root can (204)",
+  "edgeCases": [
+    "A moderator targeting another moderator or an admin",
+    "An admin targeting themselves",
+    "A moderator (not a member) reading a chat",
+    "An admin who isn't a member of the chat",
+    "A member deleting someone else's message"
+  ],
+  "tests": [
+    "test_ban[anonymous]",
+    "test_ban[user-bans-user]",
+    "test_ban[moderator-bans-user]",
+    "test_ban[moderator-bans-moderator]",
+    "test_ban[moderator-bans-admin]",
+    "test_ban[admin-bans-moderator]",
+    "test_ban[admin-bans-self]",
+    "test_ban[admin-bans-unknown]",
+    "test_forbidden_ban_says_why",
+    "test_banned_user_is_locked_out",
+    "test_list_messages[member]",
+    "test_list_messages[admin-not-member]",
+    "test_list_messages[moderator-not-member]",
+    "test_list_messages[user-not-member]",
+    "test_list_messages[unknown-chat]",
+    "test_list_messages[anonymous]",
+    "test_delete_message[author]",
+    "test_delete_message[admin]",
+    "test_delete_message[other-member]",
+    "test_delete_message[not-a-member]",
+    "test_delete_message[anonymous]"
+  ],
+  "hints": [
+    "Conceptual: authentication (401) answers 'who are you?'; authorization (403) answers 'may you do this, to this object?'. There are two layers: a role check that can be decided before the endpoint runs, and object checks that need the target (which user, which chat, which message).",
+    "Specific: inside require_role, the inner dependency already receives the current user; compare user.role with the roles tuple. For chats, write one helper that returns the chat or raises 404 when it doesn't exist OR the user may not see it, and call it from both chat endpoints, so the rule can't drift between them.",
+    "Implementation: in the inner function, `if user.role not in roles: raise HTTPException(status_code=403, detail=\"Not enough permissions\")`. Change ban_user's actor parameter to Annotated[User, Depends(require_role(\"moderator\", \"admin\"))], then after the 404 check: allowed = target.role == \"user\" if actor.role == \"moderator\" else target.id != actor.id. In delete_message, raise 403 when message.author_id != user.id and user.role != \"admin\"."
+  ],
+  "evaluation": [
+    "All 21 tests pass",
+    "Role checks live in a reusable dependency, not copied into each endpoint",
+    "Object-level rules are checked on every request for the specific chat, message or user",
+    "404 for chats the user can't see, 403 only where the user may know the object exists",
+    "Deny by default: an unknown role gets nothing"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "ARCH.M02.L02.E1",
+  "lesson": "ARCH.M02.L02",
+  "title": "Fix the invalidation in update_email",
+  "problem": "users.py caches users in Redis. get_user is correct, but update_email has three bugs: readers keep seeing the old email, the invalidation happens at the wrong moment, and when Redis is down nobody ever finds out. Fix update_email.",
+  "requirements": [
+    "Delete the same key that get_user reads (use user_key)",
+    "Delete it only after the UPDATE is committed",
+    "If there is no such user, raise UserNotFound",
+    "If the delete fails because of Redis (redis.RedisError), don't fail the update: it is committed. Log a warning on the 'users' logger that names the key",
+    "Don't catch anything broader than redis.RedisError, so real bugs still surface"
+  ],
+  "contract": "update_email(conn: sqlite3.Connection, r, user_id: int, email: str) -> None   # raises UserNotFound",
+  "expectedBehavior": "get_user(conn, r, 1) caches {'id': 1, 'email': 'old@x.io'}; after update_email(conn, r, 1, ' New@X.io ') the next get_user returns {'id': 1, 'email': 'new@x.io'}. A second database connection already sees 'new@x.io' at the moment the cache key is deleted.",
+  "edgeCases": [
+    "A concurrent reader between the delete and the commit (the test checks what another connection sees at delete time)",
+    "Redis unreachable after the commit: the update still succeeds and a warning names cache:user:<id>",
+    "A non-Redis exception from the client (a bug) must propagate",
+    "Unknown user id"
+  ],
+  "tests": [
+    "test_get_user_is_cache_aside",
+    "test_reader_sees_new_email_after_update",
+    "test_invalidation_happens_after_commit",
+    "test_unknown_user_raises",
+    "test_redis_down_update_still_counts_and_is_logged",
+    "test_non_redis_errors_are_not_hidden"
+  ],
+  "hints": [
+    "Conceptual: the database is the truth and the cache is a copy. Deleting the copy before the truth changes lets a reader refill the copy with the old value. And an error you swallow is an outage nobody can see.",
+    "Specific: compare the key update_email deletes with the key get_user reads. Then move the delete below the `with conn:` block. Finally, replace the bare `except Exception: pass` with something narrower that leaves a trace.",
+    "Implementation: after the with block and the rowcount check, key = user_key(user_id); try: r.delete(key) except redis.RedisError as e: log.warning('cache invalidation failed for %s: %s', key, e)."
+  ],
+  "evaluation": [
+    "All 6 tests pass",
+    "The cache key is built only by user_key",
+    "The delete runs after the commit, and its failure is logged with the key, not swallowed",
+    "Only redis.RedisError is caught"
+  ]
+}

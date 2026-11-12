@@ -1,0 +1,40 @@
+{
+  "id": "DB.M06.L04.E1",
+  "lesson": "DB.M06.L04",
+  "title": "Optimistic concurrency for profile edits",
+  "problem": "Two browser tabs (or two people) can edit the same profile. Implement get_profile() and update_bio() with a version column so that a save based on an outdated read fails with ConflictError instead of silently overwriting the other save.",
+  "requirements": [
+    "get_profile returns (bio, version) and raises LookupError for a missing user",
+    "update_bio saves only if the stored version still equals expected_version, increments the version, commits and returns the new version",
+    "A stale expected_version raises ConflictError and changes nothing",
+    "A missing user raises LookupError, not ConflictError",
+    "On the success path, update_bio sends exactly one statement: an UPDATE whose WHERE clause checks the version"
+  ],
+  "contract": "get_profile(conn, user_id) -> tuple[str, int]; update_bio(conn, user_id, new_bio, expected_version) -> int; class ConflictError(Exception)",
+  "expectedBehavior": "alice and bob both read version 1; alice's save returns 2; bob's save with version 1 raises ConflictError; bob re-reads version 2 and his retry returns 3",
+  "edgeCases": [
+    "Saving identical text still bumps the version",
+    "Missing user vs stale version (both match 0 rows)",
+    "Retry with a fresh version after a conflict"
+  ],
+  "tests": [
+    "test_get_profile",
+    "test_get_profile_missing_user",
+    "test_update_returns_new_version_and_saves",
+    "test_second_writer_with_stale_version_gets_conflict",
+    "test_retry_after_conflict_with_fresh_version",
+    "test_saving_the_same_bio_still_bumps_version",
+    "test_missing_user_is_lookup_error_not_conflict",
+    "test_successful_save_is_a_single_compare_and_set"
+  ],
+  "hints": [
+    "Conceptual: the version check and the write must be one atomic step. Put the check into the UPDATE's WHERE clause and let the database tell you whether it matched.",
+    "Specific: SET the new bio and version = version + 1, WHERE id = ? AND version = ?. cursor.rowcount is 1 if you won and 0 otherwise. Zero can also mean 'no such user'; distinguish only on that failure path.",
+    "Implementation: after conn.execute(UPDATE ...) and conn.commit(): if cur.rowcount == 1, return expected_version + 1; otherwise call get_profile (which raises LookupError for a missing user) and then raise ConflictError."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "No SELECT-then-UPDATE version check on the success path",
+    "ConflictError carries a message a caller could log or show"
+  ]
+}

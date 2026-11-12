@@ -1,0 +1,39 @@
+{
+  "id": "DB.M06.L02.E1",
+  "lesson": "DB.M06.L02",
+  "title": "connect() and write_transaction(): take the write lock up front",
+  "problem": "Write the two building blocks every multi-process SQLite app needs: a connect() that waits for locks instead of failing at once and never opens hidden transactions, and a write_transaction() context manager that holds the write lock from its first line and always commits or rolls back.",
+  "requirements": [
+    "connect(path, busy_timeout=5.0) returns a connection whose busy timeout is busy_timeout seconds",
+    "connect() opens no transactions implicitly (statements outside a transaction autocommit)",
+    "write_transaction(conn) starts a transaction that takes the write lock immediately, before any statement in the body",
+    "It commits when the body finishes and rolls back and re-raises when the body raises",
+    "The lock is released afterwards in both cases"
+  ],
+  "contract": "connect(path: str, busy_timeout: float = 5.0) -> sqlite3.Connection; write_transaction(conn) is a context manager",
+  "expectedBehavior": "While `with write_transaction(a):` is open, another connection's BEGIN IMMEDIATE fails with 'database is locked', but its SELECTs still see the last committed data",
+  "edgeCases": [
+    "The body raises: rollback, and the same exception propagates",
+    "The body writes nothing: the lock must still be held",
+    "busy_timeout given in seconds, reported by PRAGMA busy_timeout in milliseconds"
+  ],
+  "tests": [
+    "test_connect_sets_busy_timeout",
+    "test_connect_has_no_implicit_transactions",
+    "test_write_transaction_commits",
+    "test_write_transaction_rolls_back_and_reraises",
+    "test_write_lock_is_taken_at_the_start",
+    "test_readers_still_read_during_a_write",
+    "test_lock_is_released_after_commit_and_after_rollback"
+  ],
+  "hints": [
+    "Conceptual: two sqlite3.connect() arguments do all of connect(). For write_transaction, remember from PY.M07 that code before `yield` is setup and code after it is cleanup; which kind of BEGIN takes the write lock at once?",
+    "Specific: connect needs timeout= and isolation_level=. In write_transaction, put the yield inside try/except so you can ROLLBACK and re-raise; COMMIT only when no exception happened.",
+    "Implementation: execute 'BEGIN IMMEDIATE', then try: yield conn / except BaseException: execute 'ROLLBACK'; raise. After the try block, execute 'COMMIT'."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "The original exception propagates unchanged",
+    "No hidden transaction state: conn.in_transaction is False after the block"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "id": "WEB.M06.L04.E2",
+  "lesson": "WEB.M06.L04",
+  "title": "A 401/403/404 access table that kills seven mutants",
+  "problem": "app.py has three chat-settings endpoints with correct access control (rules in its docstring). Write the access-control table in test_access.py: one row per (who, request, expected status), covering anonymous and bad-token callers, outsiders, members, the owner and an admin for every endpoint. test_meta.py runs your rows against seven copies of app.py, each with one realistic access-control bug.",
+  "requirements": [
+    "Edit only test_access.py. Don't change app.py, security.py, conftest.py or test_meta.py",
+    "Keep the rows member-lists-members and anonymous-lists-members; give every new row a readable id",
+    "Rows are (actor, method, url, json_body_or_None, expected_status); actor is a user id, None or BAD_TOKEN",
+    "Every endpoint has at least one 401 and one 404 row, and rename and remove also a 403 row",
+    "Include allowed rows (200/204) next to the forbidden ones, so a check that's too strict is caught too",
+    "Derive the rows from the docstring rules first. Read the mutants only after your first run"
+  ],
+  "contract": "test_access.py defines CASES: list of pytest.param(actor, method, url, body, expected_status, id=...)",
+  "expectedBehavior": "pytest -q shows every test_access[...] row, test_every_endpoint_has_401_403_and_404_rows and all seven test_rows_kill[...] cases passing",
+  "edgeCases": [
+    "A syntactically valid header with a token that isn't a JWT (BAD_TOKEN), not just a missing header",
+    "An admin who isn't a member of the chat",
+    "A member removing themselves vs removing someone else",
+    "Removing the owner",
+    "An outsider: 404, not 403"
+  ],
+  "tests": [
+    "test_access[member-lists-members]",
+    "test_access[anonymous-lists-members]",
+    "test_every_endpoint_has_401_403_and_404_rows",
+    "test_rows_kill[member_can_rename]",
+    "test_rows_kill[admin_cannot_rename]",
+    "test_rows_kill[outsider_gets_403]",
+    "test_rows_kill[bad_token_is_403]",
+    "test_rows_kill[member_removes_others]",
+    "test_rows_kill[owner_can_be_removed]",
+    "test_rows_kill[outsider_lists_members]"
+  ],
+  "hints": [
+    "Conceptual: build a grid with the callers (anonymous, bad token, outsider, member, owner, admin) on one axis and the endpoints on the other, and fill in each cell from the rules. Every cell where the rules say 'allowed' needs a row as much as the 'denied' ones: a bug can deny too much as well as too little.",
+    "Specific: a missing header and an invalid token reach different code. OAuth2PasswordBearer answers the first one by itself; only get_current_user sees the second. For removals, the interesting cells are a member removing themselves (allowed), a member removing someone else (403) and anyone removing the owner (403).",
+    "Implementation: rows look like pytest.param(BAD_TOKEN, \"GET\", \"/chats/1/members\", None, 401, id=\"bad-token-lists-members\"), pytest.param(ROOT, \"PATCH\", \"/chats/1\", {\"title\": \"renamed\"}, 200, id=\"admin-renames\") and pytest.param(ALI, \"DELETE\", \"/chats/1/members/2\", None, 204, id=\"member-leaves\")."
+  ],
+  "evaluation": [
+    "All tests pass, including the seven test_rows_kill cases",
+    "Each endpoint is tested with every kind of caller",
+    "Allowed and denied rows next to each other",
+    "You can say which row kills each mutant"
+  ]
+}

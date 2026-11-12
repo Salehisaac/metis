@@ -1,0 +1,42 @@
+{
+  "id": "AS.M03.L02.E1",
+  "lesson": "AS.M03.L02",
+  "title": "An in-process smoke tester with httpx.AsyncClient",
+  "problem": "Write smoke(app, paths, concurrency): send a GET to every path of a FastAPI app in-process (httpx.AsyncClient with httpx.ASGITransport, no server), at most `concurrency` requests at a time, and return {path: status_code}. The tests are AnyIO async tests: read them as worked examples of @pytest.mark.anyio.",
+  "requirements": [
+    "Use one httpx.AsyncClient wired to the app with httpx.ASGITransport for all requests",
+    "Run the requests concurrently, at most `concurrency` at a time, and use the limit fully",
+    "A handler that raises an exception is reported as 500, not raised",
+    "Keys follow the order of `paths`; duplicate paths are requested once",
+    "Raise ValueError if concurrency < 1"
+  ],
+  "contract": "async def smoke(app: FastAPI, paths: list[str], concurrency: int) -> dict[str, int]",
+  "expectedBehavior": "smoke(app, ['/ok/1', '/missing', '/nope'], 3) returns {'/ok/1': 200, '/missing': 404, '/nope': 404}; smoke(app, ['/crash', '/ok/2'], 2) returns {'/crash': 500, '/ok/2': 200}; with 10 paths and concurrency 4 the app sees a peak of exactly 4 requests in flight.",
+  "edgeCases": [
+    "Empty paths: {}",
+    "A route that doesn't exist: 404",
+    "A handler that raises RuntimeError: 500",
+    "concurrency == 1: one request at a time; concurrency 0: ValueError",
+    "Duplicate paths: requested once, key kept in first-seen position"
+  ],
+  "tests": [
+    "test_status_codes",
+    "test_crashing_handler_reports_500",
+    "test_concurrency_is_used_and_bounded",
+    "test_concurrency_one_is_sequential",
+    "test_duplicates_requested_once",
+    "test_empty_paths",
+    "test_bad_concurrency"
+  ],
+  "hints": [
+    "Conceptual: ASGITransport lets an AsyncClient talk to the app object directly, inside your event loop. By default it re-raises handler exceptions; it has an option to return the 500 response instead.",
+    "Specific: build `httpx.ASGITransport(app=app, raise_app_exceptions=False)`, open `httpx.AsyncClient(transport=..., base_url=\"http://test\")` with async with, and reuse the semaphore + gather pattern from AS.M02.L04.",
+    "Implementation: validate concurrency, dedupe with dict.fromkeys, then inside the async with define `async def status(path)` that acquires the semaphore and returns `(await client.get(path)).status_code`; gather those and zip with the unique paths."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "One client, closed via async with",
+    "No real network or server used",
+    "The learner can explain what raise_app_exceptions changes and why tests usually keep the default"
+  ]
+}

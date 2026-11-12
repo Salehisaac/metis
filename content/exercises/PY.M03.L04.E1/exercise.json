@@ -1,0 +1,50 @@
+{
+  "id": "PY.M03.L04.E1",
+  "lesson": "PY.M03.L04",
+  "title": "Parse a key = value settings file",
+  "problem": "Implement parse_settings(text), which turns the text of a small config file (lines of `key = value`) into a dict, and parse_list(value), which turns a comma-separated value into a clean list. Real config files are messy: blank lines, comments, tabs, values containing '=', empty values and stray commas.",
+  "requirements": [
+    "parse_settings: trim spaces and tabs around keys and values",
+    "Skip blank and whitespace-only lines, and lines whose first non-space character is '#'",
+    "Split each line at the first '=' only; the rest of the line is the value",
+    "Allow empty values; a repeated key keeps the last value",
+    "Raise ValueError for a line without '=' or with an empty key; the message must contain the 1-based line number",
+    "parse_list: split on commas, trim each item, drop empty items, keep spaces inside items"
+  ],
+  "contract": "parse_settings(text: str) -> dict[str, str]\nparse_list(value: str) -> list[str]",
+  "expectedBehavior": "parse_settings('db_port=5432\\ndsn = user=app\\ndebug =') -> {'db_port': '5432', 'dsn': 'user=app', 'debug': ''}; parse_list(' a, b,,c ,') -> ['a', 'b', 'c']; parse_list('') -> [].",
+  "edgeCases": [
+    "Whitespace-only lines and tabs",
+    "Indented comments",
+    "A value that contains '='",
+    "An empty value, and an empty key",
+    "Empty input for both functions ('' split on ',' gives [''], not [])",
+    "Consecutive and trailing commas",
+    "Items with spaces inside them ('New York')"
+  ],
+  "tests": [
+    "test_parses_keys_and_values",
+    "test_skips_blank_lines_and_comments",
+    "test_value_may_contain_equals",
+    "test_empty_value_is_allowed",
+    "test_whitespace_only_lines_and_tabs",
+    "test_later_key_overrides",
+    "test_empty_text",
+    "test_line_without_equals_raises_with_line_number",
+    "test_empty_key_raises",
+    "test_parse_list",
+    "test_parse_list_keeps_inner_spaces",
+    "test_parse_list_empty_and_blank"
+  ],
+  "hints": [
+    "Conceptual: handle one line at a time: normalise it (strip), decide whether to skip it, validate it, then split it. For parse_list, remember that split(',') keeps empty strings on purpose; you have to drop them yourself.",
+    "Specific: strip() with no argument removes spaces, tabs and newlines. A stripped blank line is the empty string, which is falsy. split('=', 1) keeps any later '=' in the value. enumerate(..., start=1) gives you line numbers for the error message.",
+    "Implementation: loop over enumerate(text.split('\\n'), start=1); strip the line; continue if it's empty or starts with '#'; raise ValueError(f'line {n}: ...') if '=' is missing; split once, strip key and value, raise if the key is empty, store it. parse_list: loop over value.split(','), strip each part, keep it only if it's non-empty."
+  ],
+  "evaluation": [
+    "All tests pass",
+    "Uses split with maxsplit, not manual index searching",
+    "Error messages say which line is wrong and why",
+    "No split(' ') anywhere"
+  ]
+}

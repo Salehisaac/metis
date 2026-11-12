@@ -1,0 +1,45 @@
+{
+  "id": "PY.M07.L04.E1",
+  "lesson": "PY.M07.L04",
+  "title": "A request-scoped DB session dependency with yield",
+  "problem": "Write get_session(make_session), a generator in the style of a FastAPI dependency with yield. A framework (here: the tests) calls next() to get the session, runs the request, and then either resumes the generator (success), throws the request's exception into it (failure), or closes it (abandoned). Your generator must commit only on success, roll back on any error, always close the session exactly once, and never hide an exception.",
+  "requirements": [
+    "get_session is a generator function with exactly one yield; nothing runs until the first next()",
+    "Before the yield: create the session with make_session() and yield it",
+    "Resumed normally (success): commit, then close",
+    "An exception thrown in at the yield (failure): roll back, close, and re-raise that same exception object",
+    "If commit raises: roll back, close, and let the commit error propagate",
+    "Closed with gen.close() without being resumed: don't commit; close once",
+    "If make_session() itself raises, there is no session to roll back or close; the error propagates"
+  ],
+  "contract": "get_session(make_session: Callable[[], Session]) -> Generator[Session, None, None]; Session has commit(), rollback(), close()",
+  "expectedBehavior": "Success: events == ['commit', 'close']. Failure: events == ['rollback', 'close'] and the caller gets the same exception. Failed commit: events == ['commit', 'rollback', 'close'].",
+  "edgeCases": [
+    "Exception thrown in at the yield",
+    "commit() raising",
+    "gen.close() (GeneratorExit at the yield)",
+    "make_session() raising before the yield",
+    "Used through contextlib.contextmanager in a with statement"
+  ],
+  "tests": [
+    "test_yields_the_new_session_and_does_nothing_else_yet",
+    "test_session_is_created_lazily",
+    "test_success_commits_then_closes",
+    "test_error_rolls_back_closes_and_reraises_same_exception",
+    "test_failed_commit_rolls_back_and_propagates",
+    "test_abandoned_request_closes_without_commit",
+    "test_failing_factory_leaves_nothing_to_clean_up",
+    "test_works_as_a_context_manager"
+  ],
+  "hints": [
+    "Conceptual: draw the three paths (resume, throw, close) through your function. Each of them continues from the yield. Which code must run on all three paths, which only on success, and which only on an error?",
+    "Specific: put the yield and the commit together inside one try, so a failing commit takes the same error path as a failing request. Catch only Exception: GeneratorExit (from close()) is not an Exception subclass, so it skips the rollback but still runs finally. Create the session before the try (L02, section 3).",
+    "Implementation: session = make_session(); then try: yield it and commit; except Exception: rollback and a bare raise; finally: close."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "One yield; the session is created before the try; close is in finally",
+    "Exceptions are re-raised with a bare raise, never swallowed",
+    "No special-casing of test inputs"
+  ]
+}

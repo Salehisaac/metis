@@ -1,0 +1,40 @@
+{
+  "id": "DB.M02.L03.E1",
+  "lesson": "DB.M02.L03",
+  "title": "Counting and finding what's missing with LEFT JOIN",
+  "problem": "outer.py has three queries where the interesting rows are the ones without a match: users who never wrote (count 0), members who never posted in a chat, and chats with no recent messages. Write them with LEFT JOIN so these rows appear with the right numbers.",
+  "requirements": [
+    "Edit only outer.py",
+    "MESSAGES_PER_USER: (username, messages) for every user, 0 for users without messages; most messages first, ties by username",
+    "SILENT_MEMBERS: (username,) of members of the given chat who have no message in that chat; alphabetical",
+    "CHAT_ACTIVITY_SINCE: (chat_id, messages) for every chat, counting only messages with sent_at >= the parameter; 0 when there are none; ordered by chat_id",
+    "Every selected column is grouped or aggregated"
+  ],
+  "contract": "Each constant is one SELECT as a str. Parameters: MESSAGES_PER_USER none; SILENT_MEMBERS (chat_id,); CHAT_ACTIVITY_SINCE (since,)",
+  "expectedBehavior": "MESSAGES_PER_USER returns [('ana', 6), ('ben', 5), ('chen', 4), ('eli', 1), ('dara', 0)]; SILENT_MEMBERS (3,) returns [('ana',)]; CHAT_ACTIVITY_SINCE ('2026-11-09',) returns [(1, 2), (2, 0), (3, 1), (4, 0)]",
+  "edgeCases": [
+    "dara never sent a message: 0, not 1 and not missing",
+    "ana wrote in chats 1 and 2 but never in chat 3, so she is silent in chat 3",
+    "A chat where everyone has posted: empty list",
+    "A since value after every message: all chats with 0"
+  ],
+  "tests": [
+    "test_messages_per_user_includes_zero",
+    "test_silent_members_of_book_club",
+    "test_silent_members_of_quiet_chat",
+    "test_no_silent_members",
+    "test_chat_activity_keeps_chats_without_messages",
+    "test_chat_activity_late",
+    "test_chat_activity_in_the_future"
+  ],
+  "hints": [
+    "Conceptual: put the table whose rows must all appear on the left of a LEFT JOIN. Unmatched rows come out with NULL in every column of the right table, and those NULLs decide what you count and what you filter.",
+    "Specific: count(m.id) counts matches, count(*) counts rows (an unmatched row is still a row). A condition on the right table in WHERE removes the NULL rows again; put it in ON instead. 'Never posted in this chat' needs both chat and sender in the ON, then WHERE m.id IS NULL.",
+    "Implementation: FROM users AS u LEFT JOIN messages AS m ON m.sender_id = u.id GROUP BY u.id, u.username. For the activity query: LEFT JOIN messages AS m ON m.chat_id = c.id AND m.sent_at >= ?. For silent members: LEFT JOIN messages AS m ON m.chat_id = cm.chat_id AND m.sender_id = cm.user_id ... WHERE cm.chat_id = ? AND m.id IS NULL."
+  ],
+  "evaluation": [
+    "All seven tests pass",
+    "Counts use count(<right table column>), not count(*)",
+    "Conditions on the right-hand table are in ON when unmatched rows must survive"
+  ]
+}

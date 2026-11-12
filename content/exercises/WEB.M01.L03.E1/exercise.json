@@ -1,0 +1,43 @@
+{
+  "id": "WEB.M01.L03.E1",
+  "lesson": "WEB.M01.L03",
+  "title": "Debug a messages API from its error responses",
+  "problem": "messages_api.py runs, but several endpoints break the contract the tests describe. Run the tests, read each failure's status code and error body, and fix messages_api.py until all tests pass. Don't change the tests.",
+  "requirements": [
+    "POST /messages answers 201 with the new message",
+    "GET /messages/{id} answers 200, or 404 {\"detail\": \"message not found\"}",
+    "GET /messages/pinned answers 200 with the pinned messages",
+    "PUT /messages/{id}/text reads {\"text\": str} from the JSON body; 404 for a missing message",
+    "DELETE /messages/{id} answers 204 with no body, and 404 {\"detail\": \"message not found\"} when the message doesn't exist",
+    "Don't edit test_messages_api.py"
+  ],
+  "contract": "POST /messages -> 201; GET /messages/pinned -> 200 [..]; GET /messages/{id} -> 200 | 404; PUT /messages/{id}/text {text} -> 200 | 404 | 422 (loc body.text); DELETE /messages/{id} -> 204 | 404",
+  "expectedBehavior": "GET /messages/pinned -> [message 2]; PUT /messages/1/text {\"text\": \"hi all\"} -> 200; DELETE /messages/1 twice -> 204, then 404",
+  "edgeCases": [
+    "A route returning 200 with a body that contains a status code is not an error response",
+    "A fixed path segment next to a parameterised one",
+    "A missing field must be reported at loc ['body', 'text'], not ['query', 'text']",
+    "Deleting something that doesn't exist must not crash"
+  ],
+  "tests": [
+    "test_send_message_returns_201",
+    "test_read_existing_message",
+    "test_read_missing_message_is_404",
+    "test_pinned_messages",
+    "test_edit_text_from_json_body",
+    "test_edit_missing_message_is_404",
+    "test_edit_without_text_is_422_from_body",
+    "test_delete_then_404"
+  ],
+  "hints": [
+    "Conceptual: use the routine from section 5. For each failing test, read the status first, then the body (for 422, loc[0] says where FastAPI looked), then the route's declaration.",
+    "Specific: there are five bugs. One success code is missing, one error is returned instead of raised, two routes are in the wrong order, one parameter is read from the wrong place, and one dict lookup crashes on a missing key.",
+    "Implementation: add status_code=201 to the POST decorator; change return to raise; move the /messages/pinned route above /messages/{message_id}; add a BaseModel with a text field and use it as the edit body; use messages.pop(message_id, None) and raise 404 when it returns None."
+  ],
+  "evaluation": [
+    "All eight tests pass without editing the tests",
+    "Each fix is the smallest change that matches the contract",
+    "No HTTPException is returned; all are raised",
+    "The learner can name which status and body pointed to each bug"
+  ]
+}

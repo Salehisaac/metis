@@ -1,0 +1,39 @@
+{
+  "id": "AS.M02.L03.E1",
+  "lesson": "AS.M02.L03",
+  "title": "Debug: leaked connections and a swallowed cancellation",
+  "problem": "lease.py runs queries on connections leased from a pool. run_query leaks the connection whenever the query fails or is cancelled. query_or_default is supposed to give up after `seconds` and return a default, but it has no timeout at all, and it turns a cancellation of the caller into a normal return value. Fix both functions. Pool is correct.",
+  "requirements": [
+    "run_query releases its connection after success, after an error and after a cancellation",
+    "query_or_default returns the query result if it finishes within `seconds`",
+    "query_or_default returns `default` if the query takes longer than `seconds`, and the connection is released",
+    "Errors raised by the query propagate from query_or_default; they are not turned into the default",
+    "If the task running query_or_default is cancelled, CancelledError propagates (the task ends up cancelled) and the connection is released"
+  ],
+  "contract": "async def run_query(pool: Pool, query: str, run) -> Any\nasync def query_or_default(pool: Pool, query: str, run, seconds: float, default: Any = None) -> Any",
+  "expectedBehavior": "query_or_default(pool, 'SELECT big', slow, seconds=0.05, default='dflt') returns 'dflt' after about 0.05 s with pool.leased == 0. Cancelling a task running query_or_default makes `await task` raise CancelledError, task.cancelled() is True and pool.leased == 0.",
+  "edgeCases": [
+    "Query raises ValueError: propagates, connection released",
+    "Query exceeds the deadline: default returned, connection released",
+    "Caller cancelled before the deadline: cancellation propagates, connection released"
+  ],
+  "tests": [
+    "test_run_query_success_releases",
+    "test_run_query_error_releases",
+    "test_fast_query_returns_result",
+    "test_slow_query_returns_default_and_releases",
+    "test_query_error_is_not_a_timeout",
+    "test_cancellation_propagates_and_releases"
+  ],
+  "hints": [
+    "Conceptual: cancellation is delivered as a CancelledError raised at the await where the task is suspended. Cleanup belongs in finally, and CancelledError must keep propagating; a timeout is a different thing from a cancellation.",
+    "Specific: in run_query, wrap the await in try/finally. In query_or_default, use `async with asyncio.timeout(seconds):` and catch TimeoutError outside it, not CancelledError.",
+    "Implementation: run_query: acquire, then `try: return await run(conn, query)` with `finally: pool.release(conn)`. query_or_default: `try:` + `async with asyncio.timeout(seconds): return await run_query(...)`, then `except TimeoutError: return default`. Remove the except CancelledError block."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "No `except asyncio.CancelledError` that doesn't re-raise",
+    "Cleanup is in finally, not repeated in each except branch",
+    "TimeoutError is caught outside the `async with asyncio.timeout` block"
+  ]
+}

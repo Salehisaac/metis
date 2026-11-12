@@ -1,0 +1,41 @@
+{
+  "id": "AS.M03.L03.E1",
+  "lesson": "AS.M03.L03",
+  "title": "A request-scoped async DB connection with commit and rollback",
+  "problem": "notes.py is a small notes API on SQLite through aiosqlite. Its get_conn dependency opens a connection per request but never commits, never rolls back and never closes it, so nothing is saved and connections leak. Finish get_conn so each request is one unit of work, and implement GET /notes/{note_id}.",
+  "requirements": [
+    "get_conn opens one aiosqlite connection per request from DB_PATH (read at call time)",
+    "If the endpoint finishes without an exception, the transaction is committed",
+    "If the endpoint raises, the transaction is rolled back and the exception propagates",
+    "The connection is always closed",
+    "GET /notes/{note_id} returns {\"id\", \"title\", \"body\"} or 404 with detail \"note not found\"",
+    "Use ? placeholders in SQL"
+  ],
+  "contract": "async def get_conn()  # async generator dependency yielding an aiosqlite.Connection\nGET /notes/{note_id} -> 200 {id, title, body} | 404 {\"detail\": \"note not found\"}",
+  "expectedBehavior": "POST /notes then GET /notes/{id} returns the note, and a separate connection sees the row. POST /notes/batch with a blank title returns 422 and saves none of the batch. Every connection opened during the requests is closed.",
+  "edgeCases": [
+    "A batch that fails halfway: nothing from it is saved, earlier notes stay",
+    "Unknown id: 404, not 500",
+    "Error responses (404, 422) still close the connection",
+    "Call aiosqlite.connect through the module (the tests count connections that way)"
+  ],
+  "tests": [
+    "test_create_then_read",
+    "test_created_note_is_committed",
+    "test_missing_note_is_404",
+    "test_batch_saved",
+    "test_failed_batch_saves_nothing",
+    "test_every_connection_is_closed"
+  ],
+  "hints": [
+    "Conceptual: a dependency with yield runs the code after yield when the request is done. An exception raised in the endpoint is thrown into the generator at the yield, so try/except/finally around the yield sees it.",
+    "Specific: wrap the yield in try: commit right after the yield, roll back and re-raise in `except Exception:`, close in finally. In get_note, use fetchone() and raise HTTPException(404) when it returns None.",
+    "Implementation: `try: yield conn; await conn.commit()` / `except Exception: await conn.rollback(); raise` / `finally: await conn.close()`. Query with `await conn.execute(\"SELECT id, title, body FROM notes WHERE id = ?\", (note_id,))`."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "Commit only on the success path; rollback re-raises",
+    "Connection closed in finally (or by async with)",
+    "No string formatting in SQL"
+  ]
+}

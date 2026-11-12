@@ -1,0 +1,43 @@
+{
+  "id": "DB.M07.L03.E1",
+  "lesson": "DB.M07.L03",
+  "title": "Queries with select(): lookup, keyset pages, counts with zeros, an atomic like",
+  "problem": "Implement four repository functions with SQLAlchemy 2.x statements: a user lookup, one page of chat history (newest first, paginated by id), member counts for every chat (including empty ones, with a tie-break), and an atomic like counter.",
+  "requirements": [
+    "find_user returns the User or None",
+    "messages_page returns up to limit messages of one chat, highest id first; with before_id only ids below it",
+    "member_counts returns (title, count) for every chat, including chats with 0 members, sorted by count descending then title ascending",
+    "like adds 1 with one UPDATE whose SET clause computes likes + 1 in SQL, raises LookupError for a missing message, and doesn't commit",
+    "Use select()/update() statements, not raw SQL strings"
+  ],
+  "contract": "find_user(session, username) -> User | None; messages_page(session, chat_id, before_id=None, limit=20) -> list[Message]; member_counts(session) -> list[tuple[str, int]]; like(session, message_id) -> None",
+  "expectedBehavior": "member_counts(session) == [('backend', 2), ('general', 2), ('announcements', 1), ('empty', 0)] for the test data",
+  "edgeCases": [
+    "Unknown username",
+    "Last page shorter than limit, then an empty page",
+    "Unknown chat",
+    "A chat with no members",
+    "Equal member counts",
+    "Liking a missing message"
+  ],
+  "tests": [
+    "test_find_user",
+    "test_first_page_is_newest_first",
+    "test_next_page_continues_before_id",
+    "test_last_page_is_short_and_then_empty",
+    "test_member_counts_includes_empty_chats_and_breaks_ties_by_title",
+    "test_like_increments",
+    "test_like_missing_message",
+    "test_like_is_one_update_with_sql_arithmetic"
+  ],
+  "hints": [
+    "Conceptual: write the SQL you'd use first (DB.M01-M02), then translate each clause: WHERE -> .where(), LEFT JOIN -> .outerjoin(), GROUP BY -> .group_by(). A Select can be extended step by step.",
+    "Specific: for zero counts you need an outer join and count(ChatMember.user_id), not count(*). For pagination add .where(Message.id < before_id) only when before_id is given. For like, look at update(...).values(...) with an expression and result.rowcount.",
+    "Implementation: order_by(func.count(ChatMember.user_id).desc(), Chat.title); session.scalars(stmt.order_by(Message.id.desc()).limit(limit)); session.execute(update(Message).where(Message.id == message_id).values(likes=Message.likes + 1))."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "One query per function (no Python-side filtering or sorting)",
+    "like doesn't load the Message object"
+  ]
+}

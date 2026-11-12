@@ -1,0 +1,44 @@
+{
+  "id": "WEB.M02.L01.E1",
+  "lesson": "WEB.M02.L01",
+  "title": "Validate a chat export with a Pydantic model",
+  "problem": "A chat export is a list of rows (usually dicts, but files get corrupted). Declare the ImportedMessage model and write parse_rows, which validates every row, keeps the valid ones as models, and reports every problem with its row number, field and error type.",
+  "requirements": [
+    "ImportedMessage fields: id: int, chat_id: int, sender: str, text: str (all required); reply_to: int or null, default None; tags: list of str, default []",
+    "Unknown fields are errors (type extra_forbidden)",
+    "parse_rows(rows) returns (messages, problems): the valid rows as ImportedMessage objects in input order, and one problem dict per validation error",
+    "A problem is {\"row\": index in rows, \"field\": the error's loc joined with \".\", \"type\": the error's type}",
+    "Problems are ordered by row, then in the order Pydantic reports them",
+    "A bad row never stops the other rows from being processed"
+  ],
+  "contract": "parse_rows(rows: list) -> tuple[list[ImportedMessage], list[dict]]",
+  "expectedBehavior": "parse_rows([{\"id\": \"one\", \"chat_id\": 10, \"text\": 5}]) -> ([], [{\"row\": 0, \"field\": \"id\", \"type\": \"int_parsing\"}, {\"row\": 0, \"field\": \"sender\", \"type\": \"missing\"}, {\"row\": 0, \"field\": \"text\", \"type\": \"string_type\"}])",
+  "edgeCases": [
+    "\"7\" for an int field is valid (converted); 1.5 is not (int_from_float)",
+    "reply_to: null is valid",
+    "An error inside a list has a loc like ('tags', 1): field \"tags.1\"",
+    "A row that isn't a dict (\"garbage\", None): one model_type problem with field \"\"",
+    "Empty input gives ([], [])"
+  ],
+  "tests": [
+    "test_valid_row_is_converted_with_defaults",
+    "test_optional_fields_accept_values_and_null",
+    "test_every_error_of_a_row_is_reported",
+    "test_valid_rows_kept_and_row_numbers_match_input",
+    "test_unknown_field_is_a_problem",
+    "test_nested_location_is_joined_with_dots",
+    "test_row_that_is_not_an_object",
+    "test_empty_input"
+  ],
+  "hints": [
+    "Conceptual: the model declares the rules; parse_rows only loops, tries to build a model from each row, and turns each ValidationError into problem dicts.",
+    "Specific: required = no default; optional and nullable = `int | None = None`; forbid extras with model_config = ConfigDict(extra=\"forbid\"). Use ImportedMessage.model_validate(row), because ImportedMessage(**row) crashes on a row that isn't a dict.",
+    "Implementation: for index, row in enumerate(rows): try to append model_validate(row); in except ValidationError as exc, loop over exc.errors() and build the field with \".\".join(str(p) for p in err[\"loc\"]) (loc items can be ints)."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "The model, not hand-written checks, decides what's valid",
+    "One try/except per row, so a bad row doesn't stop the import",
+    "Problems use err[\"type\"], not the English message"
+  ]
+}

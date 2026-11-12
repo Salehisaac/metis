@@ -1,0 +1,10 @@
+# Version control and local environments
+.git
+.venv
+# Python and test caches
+__pycache__
+*.pyc
+.pytest_cache
+# Secrets and local config: never send them to the builder
+.env
+.env.*

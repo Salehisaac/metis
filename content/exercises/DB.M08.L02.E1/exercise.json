@@ -1,0 +1,43 @@
+{
+  "id": "DB.M08.L02.E1",
+  "lesson": "DB.M08.L02",
+  "title": "Race-free writes with ON CONFLICT and RETURNING",
+  "problem": "Implement three writes for the messenger without the read-then-write pattern: joining a chat (report whether it was new), recording a read marker that never moves backwards, and deleting a chat's messages while reporting which ids were deleted.",
+  "requirements": [
+    "join_chat returns True when the membership was added and False when it already existed, using a single INSERT and no SELECT",
+    "mark_read creates the marker or moves it forward, never backwards, and returns the stored value",
+    "mark_read writes with one INSERT ... ON CONFLICT statement",
+    "delete_chat_messages deletes the chat's messages in one DELETE ... RETURNING statement and returns their ids in ascending order",
+    "Parameters are bound with placeholders"
+  ],
+  "contract": "join_chat(conn, chat_id, user_id) -> bool; mark_read(conn, chat_id, user_id, message_id) -> int; delete_chat_messages(conn, chat_id) -> list[int]",
+  "expectedBehavior": "mark_read(conn, 1, 10, 9) == 9, then mark_read(conn, 1, 10, 4) == 9; join_chat(conn, 1, 10) is True, then False",
+  "edgeCases": [
+    "Joining twice",
+    "A late, smaller message id",
+    "The same message id again",
+    "Markers for other chats or users are separate",
+    "Deleting from a chat with no messages",
+    "RETURNING rows come back in arbitrary order"
+  ],
+  "tests": [
+    "test_join_chat_true_then_false",
+    "test_join_chat_is_a_single_insert",
+    "test_mark_read_creates_and_moves_forward",
+    "test_mark_read_never_moves_backwards",
+    "test_mark_read_is_per_chat_and_user",
+    "test_mark_read_writes_with_one_upsert",
+    "test_delete_chat_messages_returns_sorted_ids",
+    "test_delete_chat_messages_is_one_statement"
+  ],
+  "hints": [
+    "Conceptual: let the uniqueness constraint decide what happens on a duplicate, and let RETURNING tell you what happened, instead of asking with a SELECT first.",
+    "Specific: DO NOTHING plus RETURNING gives no row when nothing was inserted. In DO UPDATE, excluded.col is the value you tried to insert and table.col is the stored one; SQLite's max(a, b) picks the larger.",
+    "Implementation: INSERT ... ON CONFLICT (chat_id, user_id) DO NOTHING RETURNING chat_id, then `fetchone() is not None`. For mark_read: DO UPDATE SET last_read_id = max(read_markers.last_read_id, excluded.last_read_id) RETURNING last_read_id. For the delete: sorted(row[0] for row in rows)."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "No SELECT before any write",
+    "You can say what RETURNING returns for DO NOTHING on a conflict"
+  ]
+}

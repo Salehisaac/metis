@@ -1,0 +1,40 @@
+{
+  "id": "WEB.M04.L02.E1",
+  "lesson": "WEB.M04.L02",
+  "title": "Fix an order-dependent test suite with fixtures",
+  "problem": "Every test in test_messages.py passes when you run it alone, but four fail when the whole file runs. The fixtures in conftest.py share one app between tests and never undo their dependency override. Fix conftest.py so that every test starts from a fresh app with no overrides, whatever order the tests run in.",
+  "requirements": [
+    "Edit only conftest.py. Don't change app.py or test_messages.py",
+    "Keep the fixture names app, client and frozen_clock, and FROZEN",
+    "app gives each test a new app from create_app()",
+    "client yields a TestClient for that app (use it as a context manager)",
+    "frozen_clock overrides get_clock for the test that requests it and removes the override afterwards",
+    "No app or client is created at import time (module level)"
+  ],
+  "contract": "conftest.py defines fixtures app() -> FastAPI, client(app) -> TestClient and frozen_clock(app) -> datetime",
+  "expectedBehavior": "pytest -q shows 6 passed, and also with the tests run one at a time or in reverse order",
+  "edgeCases": [
+    "A test that runs after a test that wrote data",
+    "A test that runs after a test that installed a dependency override",
+    "A test that requests app directly without client"
+  ],
+  "tests": [
+    "test_post_then_list",
+    "test_new_chat_has_no_messages",
+    "test_first_message_gets_id_1",
+    "test_sent_at_comes_from_the_clock",
+    "test_real_clock_is_used_without_the_fixture",
+    "test_fixture_gives_a_fresh_app"
+  ],
+  "hints": [
+    "Conceptual: there are two leaks. State created at import time is shared by every test in the process, and a change made by a fixture stays until something undoes it. pytest has a place for 'undo' code: after the yield in a fixture.",
+    "Specific: shared_app = create_app() runs once, when conftest.py is imported. Move the create_app() call into the app fixture so it runs per test (fixtures are function-scoped by default). For the override, turn frozen_clock into a yield fixture.",
+    "Implementation: app does `application = create_app()`, yields it, then clears application.dependency_overrides. client does `with TestClient(app) as c:` and yields c inside the with. frozen_clock sets the override, yields FROZEN, then deletes the get_clock key."
+  ],
+  "evaluation": [
+    "All six tests pass in file order and in any other order",
+    "No module-level app or client",
+    "Every change a fixture makes is undone after its yield",
+    "You can explain why the tests passed one by one but failed together"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "WEB.M06.L02.E1",
+  "lesson": "WEB.M06.L02",
+  "title": "Fix a token module that trusts unverified payloads",
+  "problem": "A security review found two problems in tokens.py: the signing secret is hardcoded, and decode_access_token reads the payload without verifying anything, so anyone can write role: admin into a token. Make signing_secret read the secret from the environment and fail closed, and make decode_access_token verify the signature, algorithm, expiry, audience, issuer and required claims.",
+  "requirements": [
+    "Edit only tokens.py. Don't change test_tokens.py",
+    "Remove the hardcoded SECRET entirely",
+    "signing_secret reads os.environ[SECRET_ENV] on every call and raises RuntimeError when it's missing or shorter than MIN_SECRET_BYTES bytes",
+    "decode_access_token passes the secret, algorithms=[ALGORITHM], audience=AUDIENCE and issuer=ISSUER to jwt.decode, and requires exp, iat, sub, iss and aud",
+    "decode_access_token doesn't catch PyJWT's exceptions: callers handle jwt.InvalidTokenError",
+    "create_access_token keeps its claims; it uses signing_secret()"
+  ],
+  "contract": "signing_secret() -> str; create_access_token(user_id: int, role: str, expires_in: timedelta = 15 min) -> str; decode_access_token(token: str) -> dict (raises jwt.InvalidTokenError subclasses)",
+  "expectedBehavior": "A token made by create_access_token decodes to its claims; a token with a changed payload, another key, alg none, a past exp, another audience or issuer, or without exp or sub raises jwt.InvalidTokenError; with CHAT_JWT_SECRET unset, both functions raise RuntimeError",
+  "edgeCases": [
+    "The secret is rotated between creating and decoding a token",
+    "The environment variable is set but too short",
+    "A token whose header says alg: none",
+    "A correctly signed token for another audience"
+  ],
+  "tests": [
+    "test_round_trip",
+    "test_token_is_signed_with_the_secret_from_the_environment",
+    "test_secret_is_read_on_every_call",
+    "test_missing_secret_fails_closed",
+    "test_short_secret_fails_closed",
+    "test_no_hardcoded_secret_left",
+    "test_tampered_payload_is_rejected",
+    "test_bad_tokens_are_rejected[other-key]",
+    "test_bad_tokens_are_rejected[alg-none]",
+    "test_bad_tokens_are_rejected[expired]",
+    "test_bad_tokens_are_rejected[other-audience]",
+    "test_bad_tokens_are_rejected[other-issuer]",
+    "test_bad_tokens_are_rejected[no-exp]",
+    "test_bad_tokens_are_rejected[no-sub]",
+    "test_bad_tokens_are_rejected[garbage]"
+  ],
+  "hints": [
+    "Conceptual: the payload of a JWT is only base64, readable and writable by anyone. The signature is the only thing that makes it trustworthy, and only if the server checks it with a key it chose, an algorithm it chose, and claims it expects. Reading claims before that check is reading attacker input.",
+    "Specific: signing_secret uses os.environ.get(SECRET_ENV, \"\") and checks the length of the encoded bytes. jwt.decode needs the key, algorithms= as a list, audience=, issuer= and options={\"require\": [...]}. Expiry is checked automatically when exp is present; require makes it mandatory.",
+    "Implementation: delete SECRET. In signing_secret, raise RuntimeError(...) if len(secret.encode(\"utf-8\")) < MIN_SECRET_BYTES, else return it. In decode_access_token return jwt.decode(token, signing_secret(), algorithms=[ALGORITHM], audience=AUDIENCE, issuer=ISSUER, options={\"require\": [\"exp\", \"iat\", \"sub\", \"iss\", \"aud\"]})."
+  ],
+  "evaluation": [
+    "All 15 tests pass",
+    "No secret value anywhere in the code; missing configuration stops the app instead of falling back",
+    "algorithms is a fixed list chosen by the server, never read from the token",
+    "You can explain how the starter's decode let a user become admin"
+  ]
+}

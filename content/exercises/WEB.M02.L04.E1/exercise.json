@@ -1,0 +1,49 @@
+{
+  "id": "WEB.M02.L04.E1",
+  "lesson": "WEB.M02.L04",
+  "title": "One error format for a whole API",
+  "problem": "chats_api.py is finished: it raises an AppError, raises HTTPException (sometimes with headers), and has validated bodies and paths. Its errors still come out in FastAPI's default formats. Write install_error_handlers(app) in errors.py so that every error response uses one envelope, keeps its headers, follows the course's 400/422 policy and never echoes the request input.",
+  "requirements": [
+    "Every error body is {\"error\": {\"code\": str, \"message\": str}}; validation errors add \"fields\"",
+    "AppError: its own status, code and message",
+    "Any Starlette/FastAPI HTTPException (yours, and the router's 404/405): its status; code from STATUS_CODES, or \"http_error\" for other statuses; message = str(detail); the exception's headers are kept",
+    "RequestValidationError with any error of type json_invalid: 400, code \"malformed_json\", message \"request body is not valid JSON\", no fields",
+    "Other RequestValidationError: 422, code \"validation_failed\", message \"request validation failed\", fields = one {\"loc\": loc joined with \".\", \"type\": type, \"message\": msg} per error, in order",
+    "No error response contains the request's input values",
+    "Don't edit chats_api.py"
+  ],
+  "contract": "install_error_handlers(app: FastAPI) -> None   # registers exception handlers on app",
+  "expectedBehavior": "GET /chats/5 -> 404 {\"error\": {\"code\": \"chat_not_found\", \"message\": \"chat 5 not found\"}}; PUT /chats -> 405 with Allow: POST; POST /chats {\"title\": \"\"} -> 422 with fields [{\"loc\": \"body.title\", \"type\": \"string_too_short\", ...}]; broken JSON -> 400 malformed_json",
+  "edgeCases": [
+    "The router's own 404 and 405 must use the format too",
+    "405 must keep Allow; 401 must keep WWW-Authenticate",
+    "A status not in STATUS_CODES (418) gets code http_error",
+    "A field_validator's ValueError must not crash the handler",
+    "Path errors have locs like path.chat_id",
+    "Malformed JSON is 400, not 422"
+  ],
+  "tests": [
+    "test_success_responses_are_unchanged",
+    "test_domain_error_uses_its_own_status_and_code",
+    "test_unknown_route_uses_the_format",
+    "test_405_keeps_the_allow_header",
+    "test_raised_http_exception_uses_the_format",
+    "test_http_exception_headers_are_kept",
+    "test_unmapped_status_gets_generic_code",
+    "test_validation_error_lists_fields_without_input",
+    "test_custom_validator_error_does_not_crash_or_echo_input",
+    "test_several_errors_and_path_locations",
+    "test_malformed_json_is_400"
+  ],
+  "hints": [
+    "Conceptual: three exception classes reach your handlers: AppError, Starlette's HTTPException and RequestValidationError. Each needs one handler, and all three should build the body the same way.",
+    "Specific: register handlers inside install_error_handlers (decorators on app, or app.add_exception_handler(cls, func)). Pass headers=exc.headers for HTTP errors. In the validation handler, check for type \"json_invalid\" first, then build fields from loc, type and msg only.",
+    "Implementation: write a helper error_response(status, code, message, headers=None, **extra) that returns JSONResponse(status_code=status, content={\"error\": {\"code\": code, \"message\": message, **extra}}, headers=headers), and call it from each handler. Join locs with \".\".join(str(p) for p in err[\"loc\"])."
+  ],
+  "evaluation": [
+    "All eleven tests pass",
+    "The envelope is built in one place",
+    "HTTP handler is registered for Starlette's HTTPException and keeps headers",
+    "Validation fields are rebuilt from loc/type/msg; input and ctx never reach the response"
+  ]
+}

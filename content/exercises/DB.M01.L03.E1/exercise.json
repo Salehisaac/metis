@@ -1,0 +1,45 @@
+{
+  "id": "DB.M01.L03.E1",
+  "lesson": "DB.M01.L03",
+  "title": "Chat statistics: top senders, daily counts, active chats",
+  "problem": "This is the written SQL task from your assessment, made concrete. stats.py has three empty queries over the sample messages: the top senders of a chat within a time range, message counts per day, and per-chat activity since a moment. Write them with GROUP BY, HAVING, ORDER BY, LIMIT and a correct date range.",
+  "requirements": [
+    "Edit only stats.py; use the named placeholders listed in each comment",
+    "TOP_SENDERS: (sender_id, messages) for one chat, only messages with start <= sent_at < end, blank bodies (spaces only) not counted, most messages first, ties by lower sender_id, at most :n rows",
+    "DAILY_COUNTS: (day, messages) per calendar day for one chat, all messages counted, only days with at least :min_messages, ordered by day; day is text like '2026-11-02'",
+    "ACTIVE_CHATS: (chat_id, senders, messages) for messages with sent_at >= :since; senders counts different people; most senders first, ties by lower chat_id",
+    "Every multi-row result has a fully defined order"
+  ],
+  "contract": "Each constant is one SELECT as a str, run with a dict of parameters: TOP_SENDERS {chat_id, start, end, n}; DAILY_COUNTS {chat_id, min_messages}; ACTIVE_CHATS {since}",
+  "expectedBehavior": "TOP_SENDERS with {chat_id: 1, start: '2026-11-02', end: '2026-11-09', n: 3} returns [(1, 3), (2, 2), (3, 2)]; ACTIVE_CHATS with {since: '2026-11-04'} returns [(1, 3, 5), (3, 3, 3), (2, 1, 1)]",
+  "edgeCases": [
+    "A message whose body is only spaces (message 7) is not counted by TOP_SENDERS",
+    "A message sent exactly at start is included; one sent exactly at end is excluded",
+    "Two senders with the same count (tie-break by sender_id)",
+    "A range with no messages returns an empty list",
+    "A chat with one message from one sender counts as 1 sender, not 0",
+    "The same sender writing several messages counts once in senders"
+  ],
+  "tests": [
+    "test_top_senders_ignores_blank_messages_and_breaks_ties",
+    "test_top_senders_limits_to_n",
+    "test_top_senders_range_includes_start_and_excludes_end",
+    "test_top_senders_other_chat",
+    "test_top_senders_empty_range",
+    "test_daily_counts_with_minimum",
+    "test_daily_counts_minimum_one_keeps_every_day",
+    "test_active_chats_counts_distinct_senders",
+    "test_active_chats_late_period"
+  ],
+  "hints": [
+    "Conceptual: decide which conditions are about single rows (WHERE, before grouping) and which are about whole groups (HAVING, after counting). Then: GROUP BY the thing you report one row per, ORDER BY, LIMIT.",
+    "Specific: the time range is two comparisons, >= :start and < :end, not BETWEEN. Blank means trim(body) is the empty string. Group by calendar day with date(sent_at). 'Different people' is count(DISTINCT sender_id).",
+    "Implementation: TOP_SENDERS is SELECT sender_id, count(*) AS messages FROM messages WHERE <chat, range, not blank> GROUP BY sender_id ORDER BY messages DESC, sender_id LIMIT :n. DAILY_COUNTS needs HAVING count(*) >= :min_messages."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "Row conditions are in WHERE, group conditions in HAVING",
+    "The time range is half-open (>= start, < end)",
+    "No bare columns: every selected column is grouped or aggregated"
+  ]
+}

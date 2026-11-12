@@ -1,0 +1,41 @@
+{
+  "id": "PY.M06.L03.E1",
+  "lesson": "PY.M06.L03",
+  "title": "Make invoice.py clean under Ruff without changing its behaviour",
+  "problem": "invoice.py works, mostly. Make it pass the project's Ruff rules and the formatter, without changing what any documented function does. This exercise needs ruff in the venv: ruff==0.17.3 is installed in the academy's .venv, and the tests run it as `python -m ruff`. Run the same checks yourself: `../../.venv/bin/python -m ruff check --isolated --select E,F,W,B,I,UP,SIM --target-version py312 invoice.py`, then `../../.venv/bin/python -m ruff format --isolated --check invoice.py`. Let `--fix` do the safe fixes, then fix the rest by hand. One behaviour test fails at the start: Ruff reports the real bug behind it.",
+  "requirements": [
+    "`ruff check` with the rules above reports no problems for invoice.py",
+    "`ruff format --check` reports invoice.py as already formatted",
+    "No `# noqa` or `ruff:` suppression comments",
+    "Every function keeps the behaviour in its docstring (the behaviour tests check it)",
+    "Don't modify test_invoice.py"
+  ],
+  "contract": "invoice.py: add_line(item, price, lines=None) -> list, parse_price(text) -> float | None, total(lines) -> float, is_free(price) -> bool, describe(item, price) -> str",
+  "expectedBehavior": "Two add_line calls without a list each return a new one-item list; parse_price('abc') is None; total([]) == 0.0; describe('tea', None) == 'tea: ?'",
+  "edgeCases": [
+    "add_line called twice with no list must not share one list",
+    "parse_price of an empty string returns None",
+    "describe with a price of 0 prints 0.00, not '?'",
+    "An unsafe fix can change behaviour or leave a wrong type hint: read the diff before you accept it"
+  ],
+  "tests": [
+    "test_ruff_check_passes",
+    "test_ruff_format_check_passes",
+    "test_no_suppression_comments",
+    "test_add_line_appends_to_given_list",
+    "test_add_line_starts_fresh_each_call",
+    "test_parse_price",
+    "test_total",
+    "test_is_free_and_describe"
+  ],
+  "hints": [
+    "Conceptual: run `ruff check --fix` first (with the same options) and let it handle imports and modern type hints. Then read each remaining rule code. Search the code on the Ruff rules page if the message isn't enough.",
+    "Specific: five problems remain after --fix. B006 is the mutable-default trap from PY.M02 (and the cause of the failing behaviour test). E722 wants a specific exception: which one does float('abc') raise? F841: the variable is never used. SIM103 and E711 each have a one-line fix.",
+    "Implementation: default lines to None (hint it as list[tuple] | None) and create the list inside the function; catch ValueError; delete the unused assignment and rename the unused loop variable to _item; return the comparison directly; compare with `is None`. Finish with `ruff format invoice.py`."
+  ],
+  "evaluation": [
+    "All eight tests pass",
+    "Fixes address each rule's reason; no suppression comments and no config changes",
+    "Type hints still describe the code (e.g. a None default is hinted as `| None`)"
+  ]
+}

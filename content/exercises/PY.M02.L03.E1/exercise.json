@@ -1,0 +1,36 @@
+{
+  "id": "PY.M02.L03.E1",
+  "lesson": "PY.M02.L03",
+  "title": "Fix the billing helpers: mutation vs rebinding",
+  "problem": "billing.py has two helpers with opposite bugs. with_fee is supposed to return a new list but corrupts the caller's prices. add_coupon is supposed to change the caller's list in place but the caller never sees the new coupon. Run pytest, draw the labels for each failure, and fix both functions without changing the tests.",
+  "requirements": [
+    "with_fee returns a new list with the fee added to each amount and never changes its argument",
+    "add_coupon adds the code to the caller's list in place, only if it's not already there",
+    "add_coupon returns None",
+    "Don't modify test_billing.py"
+  ],
+  "contract": "with_fee(amounts: list[int], fee: int) -> list[int]; add_coupon(coupons: list[str], code: str) -> None",
+  "expectedBehavior": "prices = [100]; with_fee(prices, 10) == [110] and prices is still [100]; coupons = []; add_coupon(coupons, 'X') leaves coupons == ['X']",
+  "edgeCases": ["Empty lists", "Calling with_fee twice on the same list", "Adding a coupon that's already present"],
+  "tests": [
+    "test_with_fee_result",
+    "test_with_fee_leaves_input_unchanged",
+    "test_with_fee_returns_a_new_list",
+    "test_with_fee_twice_does_not_double_charge",
+    "test_with_fee_empty",
+    "test_add_coupon_changes_callers_list",
+    "test_add_coupon_to_empty_list",
+    "test_add_coupon_skips_duplicates",
+    "test_add_coupon_returns_none"
+  ],
+  "hints": [
+    "Conceptual: inside each function, the parameter is a second label for the caller's list. One function changes the shared list when it shouldn't; the other moves its local label to a new list when it should change the shared one (L03 sections 1 and 2).",
+    "Specific: `amounts[i] += fee` assigns into the caller's list. `coupons = coupons + [code]` builds a new list that only the local name points at, and it's dropped on return.",
+    "Implementation: in with_fee, start a new empty list, append amount + fee for each amount, and return the new list. In add_coupon, call the list's append method on coupons instead of rebinding it."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "The tests are unchanged",
+    "with_fee builds a new list; add_coupon mutates the argument and returns None"
+  ]
+}

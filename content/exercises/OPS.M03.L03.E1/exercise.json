@@ -1,0 +1,39 @@
+{
+  "id": "OPS.M03.L03.E1",
+  "lesson": "OPS.M03.L03",
+  "title": "Fix the team's .gitlab-ci.yml",
+  "problem": "The pipeline runs on every push, but it uses python:latest, commits an OAuth secret in variables:, downloads every package on every run, and runs ruff check, ruff format --check and pytest in one script line, so a lint failure can't fail the job. Fix it.",
+  "requirements": [
+    "Every job that runs a check uses a python:3.12... image (set it in default: or in the job), not latest",
+    "No variable whose name looks like a secret (SECRET, PASSWORD, TOKEN, API_KEY) in the file, at the top level or in jobs",
+    "PIP_CACHE_DIR points inside $CI_PROJECT_DIR, and the cache for those jobs has that path under paths: and key: files: [requirements.txt]",
+    "pip install -r requirements.txt runs (in before_script or script) before any check",
+    "ruff check, ruff format --check and pytest each run as their own script line"
+  ],
+  "contract": "A file named .gitlab-ci.yml in this folder (in a repository: at the root), parsed with yaml.safe_load. Jobs are the top-level keys that aren't global keywords like default, stages or variables.",
+  "expectedBehavior": "All six tests pass. On GitLab, a push would start the jobs in a python:3.12 image, restore pip's cache when requirements.txt hasn't changed, and fail if any of the three checks fails. OAUTH_CLIENT_SECRET would come from a masked project CI/CD variable.",
+  "edgeCases": [
+    "A job-level keyword replaces default: entirely (it doesn't merge)",
+    "Cache paths outside the project directory don't work",
+    "`a ; b ; c` in one script line reports only the last command's exit code",
+    "Splitting checks into two jobs (lint and test) is fine; each must get the image, cache and install"
+  ],
+  "tests": [
+    "test_image_is_a_pinned_python_312",
+    "test_no_secrets_in_the_file",
+    "test_pip_downloads_are_cached_per_requirements_file",
+    "test_installs_requirements_before_any_check",
+    "test_runs_ruff_lint_format_and_pytest",
+    "test_each_check_is_its_own_script_line"
+  ],
+  "hints": [
+    "Conceptual: each job runs in a fresh container from its image, with your repository checked out in $CI_PROJECT_DIR. Anything you want to keep between pipelines (pip's downloads) must be listed as a cache inside that directory, and every script line's exit code matters on its own.",
+    "Specific: move the shared settings (image, cache, the install in before_script) into default:, point pip's cache into the project with the PIP_CACHE_DIR variable, delete the secret from the file, and split the combined line into separate script items.",
+    "Implementation: default: image: python:3.12-slim; cache: key: files: [requirements.txt], paths: [.cache/pip]; before_script: [python -m pip install -r requirements.txt]. variables: PIP_CACHE_DIR: \"$CI_PROJECT_DIR/.cache/pip\". Jobs: lint with script [ruff check ., ruff format --check .] and test with script [pytest -q]."
+  ],
+  "evaluation": [
+    "All six tests pass",
+    "The removed secret is described as a masked (and, for production values, protected) CI/CD variable, and the old value is rotated because it is in Git history",
+    "stages: lists the stage the jobs use"
+  ]
+}

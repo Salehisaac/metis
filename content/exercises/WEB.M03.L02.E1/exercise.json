@@ -1,0 +1,44 @@
+{
+  "id": "WEB.M03.L02.E1",
+  "lesson": "WEB.M03.L02",
+  "title": "A transaction dependency, the current user and a membership check",
+  "problem": "group_chat_api.py has finished routes for a group chat that use three dependencies you must write: get_tx (one Transaction per request, rolled back on errors), get_current_user (from the X-User-Id header) and get_member_chat (the chat from the path, if the user is a member).",
+  "requirements": [
+    "get_tx yields one Transaction per request; on any exception it calls rollback() and re-raises the same exception; it always calls close(); it never commits (the routes do)",
+    "get_current_user reads the integer header X-User-Id and returns the user from USERS; missing or unknown id: 401 {\"detail\": \"missing or unknown X-User-Id\"}",
+    "get_member_chat takes chat_id from the path and depends on get_current_user; unknown chat: 404 {\"detail\": \"chat not found\"}; user not in chat[\"members\"]: 403 {\"detail\": \"not a member of this chat\"}; otherwise returns the chat",
+    "Don't change the Transaction class or the routes"
+  ],
+  "contract": "get_tx() -> Generator[Transaction]; get_current_user(x_user_id from header) -> dict; get_member_chat(chat_id: int, user) -> dict",
+  "expectedBehavior": "POST /chats/10/messages with X-User-Id: 1 -> 201 and tx_log == [\"begin\", \"commit\", \"close\"]; with X-User-Id: 3 -> 403; a batch with an empty text -> 422 with nothing stored and tx_log == [\"begin\", \"rollback\", \"close\"]",
+  "edgeCases": [
+    "No header and an unknown user id are both 401",
+    "X-User-Id: ali is FastAPI's own 422 (loc header.x-user-id)",
+    "Unauthenticated request for an unknown chat: 401, not 404",
+    "Messages added before a failure in the same request are not stored",
+    "An unexpected exception must still reach the caller (not be swallowed)",
+    "Every transaction that begins is closed"
+  ],
+  "tests": [
+    "test_missing_or_unknown_user_is_401",
+    "test_non_integer_user_id_is_422",
+    "test_member_sends_and_transaction_commits_and_closes",
+    "test_non_member_is_403_and_nothing_stored",
+    "test_unknown_chat_is_404_but_authentication_comes_first",
+    "test_failed_batch_rolls_back_everything",
+    "test_successful_batch",
+    "test_unexpected_error_is_rolled_back_and_re_raised",
+    "test_current_user_can_be_overridden_in_tests"
+  ],
+  "hints": [
+    "Conceptual: get_tx is a generator with setup, one yield, error handling and cleanup. get_member_chat is a sub-dependency: it declares the current user as its own parameter, which also makes authentication run first.",
+    "Specific: wrap the yield in try / except Exception / finally, and end the except block with a bare raise. Declare the header as Annotated[int | None, Header()] = None. get_member_chat's parameters are chat_id: int and the current user via Depends(get_current_user).",
+    "Implementation: in get_tx, create Transaction() before try; except: rollback() then raise; finally: close(). In get_member_chat: look the chat up with CHATS.get(chat_id), raise 404 if None, raise 403 if user[\"id\"] not in chat[\"members\"], else return chat."
+  ],
+  "evaluation": [
+    "All nine tests pass",
+    "Exceptions are re-raised, never swallowed",
+    "The dependency doesn't commit",
+    "Authorisation builds on the current-user dependency instead of reading the header again"
+  ]
+}
